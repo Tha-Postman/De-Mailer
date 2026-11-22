@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#24113f">
+  <meta name="description" content="The official home of De Mailer — Tha Postman. Music, letters and a community built on real connection.">
+  <title>De Mailer — The Post Office</title>
+  <!-- <meta http-equiv="refresh" content="2"> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="announcement"><span class="tiny-envelope">✉</span> A message from Tha Postman: welcome to my corner of the world.</div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="De Mailer home"><span class="brand-mark">✉</span><span>DE MAILER<small>THE POST OFFICE</small></span></a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <a href="#music">Music</a><a href="#letters">Letters</a><a href="#about">About</a><a href="#join">The Mailers</a>
+      <a class="nav-locker" href="#locker"> <span>♙</span> Members' Locker</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-image"></div><div class="hero-shade"></div>
+      <div class="hero-content">
+        <span class="eyebrow light-eyebrow"><span class="eyebrow-line"></span> YOUR MESSAGE HAS ARRIVED</span>
+        <p class="hero-kicker">Tha Postman is in.</p>
+        <h1>Timeless delivery.<br><em>Through music.</em></h1>
+        <p class="hero-copy">Stories, sounds and feelings delivered with intention. This is more than a website. It's where the music meets the people.</p>
+        <div class="hero-actions"><a class="button button-light" href="#join">Join the Mailers <span>↗</span></a><a class="button button-outline" href="#music">Listen to music <span>♫</span></a></div>
+        <div class="hero-signature"><span>✉</span><span>Real connection. No forwarding address.</span></div>
+      </div>
+      <div class="hero-side-note">INDEPENDENT SOUND · PERSONAL STORIES</div>
+    </section>
+
+    <section class="ticker" aria-label="Artist motto"><div>GOOD MUSIC FINDS ITS WAY <span>✳</span> A LETTER FROM THE HEART <span>✳</span> MESSAGE DELIVERED <span>✳</span> GOOD MUSIC FINDS ITS WAY <span>✳</span></div></section>
+
+    
+
+    <section class="section music-section" id="music">
+
+      <div class="section-headin">
+        <div><span class="eyebrow">Latest Release</span>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/album/5BdstvDb9fCVK8OaAO07jY?utm_source=generator&si=ab124215af664570" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      </div>
+
+      <div class="section-heading">
+        <div><span class="eyebrow">THE SOUND ARCHIVE</span><h2>Music in the mail<span class="purple-dot">.</span></h2><p>Every song carries a message. Find the one that speaks to you.</p></div>
+        <a class="text-link" href="#music-library">Explore the archive <span>↗</span></a>
+      </div>
+      <div class="music-toolbar"><label class="search-box"><span>⌕</span><input id="musicSearch" type="search" placeholder="Search songs, titles or years..." aria-label="Search music"></label><span class="result-count" id="musicCount"></span></div>
+      <div class="music-grid" id="musicGrid"></div>
+      <div class="center-action"><button class="button button-soft" id="showAllMusic">See all music <span>↓</span></button></div>
+      <div id="music-library" class="archive-anchor"></div>
+    </section>
+
+    <section class="quote-band" id="about"><div class="quote-envelope">✉</div><p class="eyebrow light-eyebrow">A NOTE FROM Tha Postman</p><h2>“Music is the delivery.<br><em>Connection is the destination.</em>”</h2><p class="quote-credit">— DE MAILER, THA POSTMAN</p></section>
+
+    <section class="section letters-section" id="letters">
+      <div class="section-heading"><div><span class="eyebrow">FROM MY DESK TO YOURS</span><h2>Letters from Tha Postman<span class="purple-dot">.</span></h2><p>Thoughts, updates and little things I want to share with you.</p></div><span class="section-stamp">✉<small>PERSONAL<br>DELIVERY</small></span></div>
+      <div class="letters-grid" id="lettersGrid"><article class="letter-card letter-placeholder"><span class="letter-date">A NOTE FOR YOU</span><h3>More letters are on their way.</h3><p>Check back soon. I have a few things to tell you.</p><span class="letter-bottom">With love, Tha Postman <b>✉</b></span></article></div>
+    </section>
+
+    <section class="join-section" id="join">
+      <div class="join-decoration">✉</div>
+      <div class="join-copy"><span class="eyebrow light-eyebrow">DON'T JUST FOLLOW. BELONG.</span><h2>Stay connected.<br><em>Stay in the loop.</em></h2><p>Get new music, personal letters and important updates delivered straight to your inbox. No noise. Just the good stuff.</p><div class="privacy-note">♡ Your inbox is respected. Unsubscribe whenever you want.</div></div>
+      <form class="join-form" id="subscribeForm">
+        <div class="form-top"><span class="form-icon">✉</span><div><strong>Join THE MAILERS</strong><small>Your first delivery starts here.</small></div></div>
+        <label>Your name<input name="name" type="text" placeholder="What should I call you?" required maxlength="80"></label>
+        <label>Email address<input name="email" type="email" placeholder="you@example.com" required maxlength="254"></label>
+        <label class="checkbox-line"><input type="checkbox" required> <span>I agree to receive music updates and letters from De Mailer. I can unsubscribe anytime.</span></label>
+        <button class="button button-purple button-full" type="submit">Join the Mailers <span>→</span></button>
+        <p class="form-feedback" id="subscribeFeedback" role="status"></p>
+      </form>
+    </section>
+
+    <section class="section ask-section" id="ask">
+      <div class="ask-intro"><span class="eyebrow">Tha Postman'S INBOX</span><h2>Ask Tha Postman<span class="purple-dot">.</span></h2><p>Something on your mind? A question, a thought, or just a hello. Write me a letter.</p><div class="handwritten">I read what makes it through. <span>✍</span></div></div>
+      <form class="ask-form" id="letterForm">
+        <div class="two-fields"><label>Your name<input name="name" required maxlength="80" placeholder="Your name"></label><label>Your email<input name="email" type="email" required maxlength="254" placeholder="Your email"></label></div>
+        <label>What's on your mind?<textarea name="message" rows="5" required maxlength="3000" placeholder="Write your message here..."></textarea></label>
+        <button class="button button-dark" type="submit">Send your letter <span>✉</span></button><p class="form-feedback" id="letterFeedback" role="status"></p>
+      </form>
+    </section>
+
+    <section class="locker-section" id="locker">
+      <div class="locker-icon">♙</div><span class="eyebrow light-eyebrow">A LITTLE SOMETHING EXTRA</span><h2>The Mailers' Locker</h2><p>A private corner for the people who signed up. Exclusive notes, early announcements and special deliveries live here.</p>
+      <div class="locker-card" id="lockerPanel">
+        <form id="lockerForm">
+          <label>Email address<input name="email" type="email" required autocomplete="email" placeholder="Use the email you joined with"></label>
+          <button class="button button-purple button-full" id="lockerSubmit" type="submit">Open my locker <span>→</span></button>
+          <p class="locker-hint">Already joined THE MAILERS? Enter the same email address you used to subscribe. No account or password needed.</p>
+          <p class="form-feedback" id="lockerFeedback" role="status"></p>
+        </form>
+        <div id="memberContent" class="hidden"><p class="member-welcome">You're inside, Mailer. ✉</p><h3>Welcome to your postbox.</h3><div id="memberLetters" class="member-letters">Your exclusive deliveries will appear here.</div><button class="button button-outline-dark" id="lockerClose" type="button">Close locker</button></div>
+      </div>
+    </section>
+
+    <section class="social-section"><div><span class="eyebrow">FOLLOW THE DELIVERY</span><h2>Find me out there<span class="purple-dot">.</span></h2></div><div class="social-links">
+      <a href="#" data-social="instagram" aria-label="Instagram">◎<small>Instagram</small></a><a href="#" data-social="youtube" aria-label="YouTube">▶<small>YouTube</small></a><a href="#" data-social="facebook" aria-label="Facebook">f<small>Facebook</small></a><a href="#" data-social="twitter" aria-label="X">𝕏<small>X / Twitter</small></a><a href="#" data-social="tiktok" aria-label="TikTok">♪<small>TikTok</small></a>
+    </div></section>
+  </main>
+
+  <footer class="site-footer"><a class="brand footer-brand" href="#home"><span class="brand-mark">✉</span><span>DE MAILER<small>THE POST OFFICE</small></span></a>
+    <!-- <p>Made with intention. Delivered with love.</p> -->
+    <span>© <span id="year"></span> De Mailer. All messages reserved.</span><a href="admin.html" class="postmaster-link">Tha Postman's Office ↗</a></footer>
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>
