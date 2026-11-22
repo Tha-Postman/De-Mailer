@@ -2,7 +2,30 @@
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#24113f"><title>Postmaster's Office — De Mailer</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="admin.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script defer src="admin.js"></script></head>
 <body class="admin-body"><header class="admin-header"><a class="brand" href="index.html"><span class="brand-mark">✉</span><span>DE MAILER<small>POSTMASTER'S OFFICE</small></span></a><a href="index.html" class="text-link">← Back to website</a></header>
 <main class="admin-wrap"><div class="admin-title"><span class="eyebrow">PRIVATE ADMINISTRATION</span><h1>Postmaster's Office<span class="purple-dot">.</span></h1><p>Manage your community, messages and letters.</p></div>
-<section class="admin-panel" id="adminLogin"><h2>Admin sign in</h2><p>Only an account explicitly authorized as an admin can access this dashboard.</p><form id="adminLoginForm"><label>Admin email<input name="email" type="email" autocomplete="email" required></label><button class="button button-purple button-full">Email me a secure sign-in link</button><p class="form-feedback" id="adminLoginFeedback"></p></form></section>
+
+<section class="admin-panel" id="adminLogin">
+  <h2>Admin sign in</h2>
+  <p>Only an account explicitly authorized as an admin can access this dashboard.</p>
+
+  <form id="adminLoginForm">
+    <label>
+      Admin email
+      <input name="email" type="email" autocomplete="username" required>
+    </label>
+
+    <label>
+      Password
+      <input name="password" type="password" autocomplete="current-password" required>
+    </label>
+
+    <button type="submit" class="button button-purple button-full">
+      Sign In
+    </button>
+
+    <p class="form-feedback" id="adminLoginFeedback"></p>
+  </form>
+</section>
+
 <div id="adminDashboard" class="hidden">
 <div class="admin-topline"><div><strong id="adminEmail"></strong><small>Authorized Postmaster</small></div><button id="adminSignOut" class="button button-soft">Sign out</button></div>
 <div class="stats-grid"><article class="stat-card"><span>EMAIL SUBSCRIBERS</span><strong id="subscriberCount">—</strong></article><article class="stat-card"><span>FAN LETTERS</span><strong id="messageCount">—</strong></article><article class="stat-card"><span>MEMBER ACCOUNTS</span><strong id="memberCount">—</strong></article></div>

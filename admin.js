@@ -30,7 +30,30 @@ function downloadCSV(rows){
   const url=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));
   const a=document.createElement("a");a.href=url;a.download="de-mailer-subscribers.csv";a.click();URL.revokeObjectURL(url);
 }
-$("#adminLoginForm").addEventListener("submit",async e=>{e.preventDefault();if(!db)return feedback("#adminLoginFeedback","Add your Supabase URL and anon key to admin.js.",true);const d=Object.fromEntries(new FormData(e.currentTarget));const email=d.email.trim().toLowerCase();const {error}=await db.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:`${window.location.origin}${window.location.pathname}`}});if(error)return feedback("#adminLoginFeedback",error.message,true);feedback("#adminLoginFeedback",`If ${email} is an authorized admin, a secure sign-in link has been sent.`)});
+
+$("#adminLoginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  if (!db) {
+    return feedback("#adminLoginFeedback", "Supabase is not configured.", true);
+  }
+
+  const d = Object.fromEntries(new FormData(e.currentTarget));
+  const email = d.email.trim().toLowerCase();
+  const password = d.password;
+
+  const { data, error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    return feedback("#adminLoginFeedback", error.message, true);
+  }
+
+  await requireAdmin(data.user);
+});
+
 $("#adminSignOut").addEventListener("click",async()=>{await db.auth.signOut();location.reload()});
 $("#publishLetterForm").addEventListener("submit",async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const {error}=await db.from("public_letters").insert({title:d.title.trim(),body:d.body.trim(),published:e.currentTarget.published.checked});feedback("#publishFeedback",error?error.message:"Your letter has been saved.",!!error);if(!error)e.currentTarget.reset()});
 $("#memberDeliveryForm").addEventListener("submit",async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));const {error}=await db.from("member_deliveries").insert({title:d.title.trim(),body:d.body.trim()});feedback("#memberFeedback",error?error.message:"Exclusive delivery published to the locker.",!!error);if(!error)e.currentTarget.reset()});
