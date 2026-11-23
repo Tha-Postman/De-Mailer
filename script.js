@@ -12,14 +12,42 @@ const db = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_A
 // EDIT YOUR MUSIC HERE. Leave snippet blank if you don't have a preview.
 // Use paths such as assets/music/song-name.mp3 and assets/music/song-name.jpg.
 const tracks = [
-  { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/Since_99.jpeg", snippet: "assets/music/since-99.mp3", spotify: "https://found.ee/Since99/ms-spotify-3", apple: "https://found.ee/Since99/ms-apple-0", youtube: "#" },
-  { title: "The Mirror", year: "2026", tag: "Single", artwork: "assets/music/the-mirror.jpg", snippet: "", spotify: "#", apple: "#", youtube: "#" },
-  { title: "Once Upon a Time", year: "2026", tag: "Single", artwork: "assets/music/once-upon-a-time.jpg", snippet: "", spotify: "#", apple: "#", youtube: "#" }
+
+  // { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/Since_99.jpeg", snippet: "assets/music/since-99.mp3", spotify: "https://found.ee/Since99/ms-spotify-3", apple: "https://found.ee/Since99/ms-apple-0", youtube: "#" },
+  { title: "Prisoners", year: "2026", tag: "Latest release", artwork: "assets/artwork/prisoners.png", listen: "https://found.ee/Prisoners-1" },
+
+  { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/since_99.png", listen: "https://found.ee/Since99" },
+
+  { title: "Watch Over Me", year: "2023", tag: "Single", artwork: "assets/artwork/wom.png", listen: "demailer.fanlink.tv/vTSH" },
+
+  { title: "Get Over You", year: "2023", tag: "Single", artwork: "assets/artwork/get_over_you.png", listen: "#" },
+
+  { title: "I Believe", year: "2024", tag: "Single", artwork: "assets/artwork/i_believe.png", listen: "#" },
+
+  { title: "Ishara Yangu", year: "2025", tag: "Single", artwork: "assets/artwork/ishara_yangu.png", listen: "#" },
+
+  { title: "Downtown", year: "2025", tag: "Single", artwork: "assets/artwork/downtown.png", listen: "https://fanlink.tv/Demailer" },
+
+  { title: "Omotena", year: "2025", tag: "Single", artwork: "assets/artwork/omotena.png", listen: "fanlink.tv/OmOtena" },
+
+  { title: "Omoge", year: "2025", tag: "Single", artwork: "assets/artwork/omoge.png", listen: "#" },
+
+  { title: "I For Like Dey", year: "2025", tag: "Single", artwork: "assets/artwork/ifld.png", listen: "#" },
+
+  { title: "Tell It To Nobody", year: "2025", tag: "Single", artwork: "assets/artwork/titn.png", listen: "https://fanlink.tv/TITN" },
+
+  { title: "The Mirror", year: "2026", tag: "Single", artwork: "assets/artwork/the_mirror.png", listen: "https://fanlink.tv/Themirror" },
+
+
+  { title: "Orente", year: "2025", tag: "Latest release", artwork: "assets/artwork/orente.png", listen: "#" },
+
+  { title: "Bamise", year: "2024", tag: "Latest release", artwork: "assets/artwork/bamise.png", listen: "#" },
+  
 ];
 
 // Add or replace these with your real profile URLs.
 const socials = {
-  instagram: "#", youtube: "#", facebook: "#", twitter: "#", tiktok: "#"
+  instagram: "#", youtube: "#", facebook: "#", twitter: "#", tiktok: "#", listen: "#",
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -45,12 +73,15 @@ function renderTracks(search = "") {
       </div>
       <div class="track-meta"><span class="track-tag">${escapeHTML(track.tag || "Release")}</span><span class="track-year">${escapeHTML(track.year)}</span></div>
       <h3>${escapeHTML(track.title)}</h3>
-      ${track.snippet ? `<audio class="audio-player" controls preload="none" src="${escapeHTML(track.snippet)}">Your browser does not support audio.</audio>` : '<p class="no-preview">Streaming links below</p>'}
+
+      ${track.snippet ? `<audio class="audio-player" controls preload="none" src="${escapeHTML(track.snippet)}">Your browser does not support audio.</audio>` : '<p class="no-preview"></p>'}
+
       <div class="stream-links">
         ${track.spotify && track.spotify !== "#" ? `<a href="${escapeHTML(track.spotify)}" target="_blank" rel="noopener">Spotify ↗</a>` : ""}
         ${track.apple && track.apple !== "#" ? `<a href="${escapeHTML(track.apple)}" target="_blank" rel="noopener">Apple Music ↗</a>` : ""}
         ${track.youtube && track.youtube !== "#" ? `<a href="${escapeHTML(track.youtube)}" target="_blank" rel="noopener">YouTube ↗</a>` : ""}
-        ${[track.spotify,track.apple,track.youtube].every(link => !link || link === "#") ? '<span class="stream-placeholder">Add your streaming links in script.js</span>' : ""}
+        ${track.listen && track.listen !== "#" ? `<a href="${escapeHTML(track.listen)}" target="_blank" rel="noopener">Listen</a>` : ""}
+        ${[track.spotify,track.apple,track.youtube,track.listen].every(link => !link || link === "#") ? '<span class="stream-placeholder">Streaming link unavailable</span>' : ""}
       </div>
     </article>`).join("");
 }
