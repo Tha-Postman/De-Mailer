@@ -59,7 +59,7 @@ function escapeHTML(value = "") {
 }
 function renderTracks(search = "") {
   const matches = tracks.filter(track => `${track.title} ${track.year} ${track.tag}`.toLowerCase().includes(search.toLowerCase()));
-  const visible = showAllTracks || search ? matches : matches.slice(0, 3);
+  const visible = showAllTracks || search ? matches : matches.slice(0, 4);
   $("#musicCount").textContent = `${matches.length} ${matches.length === 1 ? "delivery" : "deliveries"}`;
   if (!visible.length) {
     musicGrid.innerHTML = '<div class="empty-state">No songs found. Try another search.</div>';
