@@ -294,3 +294,37 @@
 .fab{
    color:red;
 } */
+
+
+/* App-like mobile experience */
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+/* Prevent automatic iPhone zoom when typing */
+input,
+textarea,
+select,
+button {
+  font-size: 16px;
+}
+
+/* Smooth touch interaction */
+a,
+button,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+/* Respect iPhone safe areas */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
