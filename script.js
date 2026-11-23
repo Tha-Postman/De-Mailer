@@ -14,7 +14,8 @@ const db = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_A
 const tracks = [
 
   // { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/Since_99.jpeg", snippet: "assets/music/since-99.mp3", spotify: "https://found.ee/Since99/ms-spotify-3", apple: "https://found.ee/Since99/ms-apple-0", youtube: "#" },
-  { title: "Prisoners", year: "2026", tag: "Latest release", artwork: "assets/artwork/prisoners.png", listen: "https://found.ee/Prisoners-1" },
+
+  { title: "Prisoners", year: "2026", tag: "Latest release", artwork: "assets/artwork/prisoners.PNG", listen: "https://found.ee/Prisoners-1" },
 
   { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/since_99.png", listen: "https://found.ee/Since99" },
 
