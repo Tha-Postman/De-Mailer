@@ -95,7 +95,8 @@
       outline:0;
       width:100%;
       font-size:11px;
-      color:var(--ink)
+      /* color:var(--ink) */
+      background-color:white;
    }
    
    .result-count{
