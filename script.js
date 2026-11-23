@@ -17,32 +17,32 @@ const tracks = [
 
   { title: "Prisoners", year: "2026", tag: "Latest release", artwork: "assets/artwork/prisoners.PNG", listen: "https://found.ee/Prisoners-1" },
 
-  { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/since_99.png", listen: "https://found.ee/Since99" },
+  { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/since_99.PNG", listen: "https://found.ee/Since99" },
 
-  { title: "Watch Over Me", year: "2023", tag: "Single", artwork: "assets/artwork/wom.png", listen: "demailer.fanlink.tv/vTSH" },
+  { title: "Watch Over Me", year: "2023", tag: "Single", artwork: "assets/artwork/wom.png", listen: "https://demailer.fanlink.tv/vTSH" },
 
-  { title: "Get Over You", year: "2023", tag: "Single", artwork: "assets/artwork/get_over_you.png", listen: "#" },
+  { title: "Get Over You", year: "2023", tag: "Single", artwork: "assets/artwork/get_over_you.PNG", listen: "#" },
 
-  { title: "I Believe", year: "2024", tag: "Single", artwork: "assets/artwork/i_believe.png", listen: "#" },
+  { title: "I Believe", year: "2024", tag: "Single", artwork: "assets/artwork/i_believe.PNG", listen: "#" },
 
-  { title: "Ishara Yangu", year: "2025", tag: "Single", artwork: "assets/artwork/ishara_yangu.png", listen: "#" },
+  { title: "Ishara Yangu", year: "2025", tag: "Single", artwork: "assets/artwork/ishara_yangu.PNG", listen: "#" },
 
-  { title: "Downtown", year: "2025", tag: "Single", artwork: "assets/artwork/downtown.png", listen: "https://fanlink.tv/Demailer" },
+  { title: "Downtown", year: "2025", tag: "Single", artwork: "assets/artwork/downtown.PNG", listen: "https://fanlink.tv/Demailer" },
 
-  { title: "Omotena", year: "2025", tag: "Single", artwork: "assets/artwork/omotena.png", listen: "fanlink.tv/OmOtena" },
+  { title: "Omotena", year: "2025", tag: "Single", artwork: "assets/artwork/omotena.PNG", listen: "fanlink.tv/OmOtena" },
 
-  { title: "Omoge", year: "2025", tag: "Single", artwork: "assets/artwork/omoge.png", listen: "#" },
+  { title: "Omoge", year: "2025", tag: "Single", artwork: "assets/artwork/omoge.PNG", listen: "#" },
 
-  { title: "I For Like Dey", year: "2025", tag: "Single", artwork: "assets/artwork/ifld.png", listen: "#" },
+  { title: "I For Like Dey", year: "2025", tag: "Single", artwork: "assets/artwork/ifld.PNG", listen: "#" },
 
   { title: "Tell It To Nobody", year: "2025", tag: "Single", artwork: "assets/artwork/titn.png", listen: "https://fanlink.tv/TITN" },
 
-  { title: "The Mirror", year: "2026", tag: "Single", artwork: "assets/artwork/the_mirror.png", listen: "https://fanlink.tv/Themirror" },
+  { title: "The Mirror", year: "2026", tag: "Single", artwork: "assets/artwork/the_mirror.PNG", listen: "https://fanlink.tv/Themirror" },
 
 
-  { title: "Orente", year: "2025", tag: "Latest release", artwork: "assets/artwork/orente.png", listen: "#" },
+  { title: "Orente", year: "2025", tag: "Latest release", artwork: "assets/artwork/orente.PNG", listen: "#" },
 
-  { title: "Bamise", year: "2024", tag: "Latest release", artwork: "assets/artwork/bamise.png", listen: "#" },
+  { title: "Bamise", year: "2024", tag: "Latest release", artwork: "assets/artwork/bamise.PNG", listen: "#" },
   
 ];
 
@@ -69,7 +69,7 @@ function renderTracks(search = "") {
   musicGrid.innerHTML = visible.map((track, index) => `
     <article class="music-card">
       <div class="artwork">
-        <div class="artwork-fallback">✉</div>
+        <div class="artwork-fallback"></div>
         ${track.artwork ? `<img src="${escapeHTML(track.artwork)}" alt="${escapeHTML(track.title)} artwork" onerror="this.style.display='none'">` : ""}
       </div>
       <div class="track-meta"><span class="track-tag">${escapeHTML(track.tag || "Release")}</span><span class="track-year">${escapeHTML(track.year)}</span></div>
