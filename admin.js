@@ -821,6 +821,66 @@ try {
 }
 
 
+// Forgot Password: request a secure recovery email.
+
+$("#forgotPasswordLink").addEventListener("click", async event => {
+  event.preventDefault();
+
+  const emailInput = $('#adminLoginForm input[name="email"]');
+
+  const email = prompt(
+    "Enter your admin email address:",
+    emailInput.value.trim()
+  );
+
+  if (email === null) return;
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    feedback("#adminLoginFeedback", "Please enter a valid email address.", true);
+    return;
+  }
+
+  const link = $("#forgotPasswordLink");
+
+  link.style.pointerEvents = "none";
+  link.textContent = "Sending recovery email...";
+
+  feedback("#adminLoginFeedback", "Please wait while we process your request.");
+
+  try {
+    const response = await fetch("/api/request-admin-reset", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email: cleanEmail })
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Could not process your request. Please try again."
+      );
+    }
+
+    feedback(
+      "#adminLoginFeedback",
+      result.message || "If the address belongs to an admin account, a recovery email will be sent."
+    );
+
+  } catch (error) {
+    feedback("#adminLoginFeedback", error.message, true);
+
+  } finally {
+    link.style.pointerEvents = "";
+    link.textContent = "Forgot password?";
+  }
+});
+
+
 $("#adminLoginForm").addEventListener("submit", async e => {
   e.preventDefault();
   if (!db) return feedback("#adminLoginFeedback", "Supabase is not configured.", true);
