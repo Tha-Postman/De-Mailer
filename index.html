@@ -128,10 +128,28 @@
     <section class="join-section" id="join">
       <!-- <div class="join-decoration">✉</div> -->
       <div class="join-copy"><span class="eyebrow light-eyebrow">DON'T JUST FOLLOW. BELONG.</span><h2>Stay connected.<br><em>Stay in the loop.</em></h2><p>Get new music, personal letters and important updates delivered straight to your inbox. No noise. Just the good stuff.</p><div class="privacy-note">♡ Your inbox is respected. Unsubscribe whenever you want.</div></div>
+
       <form class="join-form" id="subscribeForm">
-        <div class="form-top"><span class="form-icon">✉</span><div><strong>Join THE MAILERS</strong><small>Your first delivery starts here.</small></div></div>
+        <div class="form-top"><span class="brand-mark">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="10" width="38" height="28" rx="5"
+        stroke="currentColor" stroke-width="2.8"/>
+      <path d="M7 14L24 27L41 14"
+        stroke="currentColor" stroke-width="2.8"
+        stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 36L19 25M41 36L29 25"
+        stroke="currentColor" stroke-width="2.8"
+        stroke-linecap="round"/>
+    </svg>
+  </span><div><strong>Join THE MAILERS</strong><small>Your first delivery starts here.</small></div></div>
         <label>Your name<input name="name" type="text" placeholder="What should I call you?" required maxlength="80"></label>
+
         <label>Email address<input name="email" type="email" placeholder="you@example.com" required maxlength="254"></label>
+        
+        <label>Confirm email address
+        <input name="emailConfirm" type="email" placeholder="Enter your email again" required maxlength="254">
+        </label>
+        
         <label class="checkbox-line"><input type="checkbox" required> <span>I agree to receive music updates and letters from De Mailer. I can unsubscribe anytime.</span></label>
         <button class="button button-purple button-full" type="submit">Join the Mailers <span>→</span></button>
         <p class="form-feedback" id="subscribeFeedback" role="status"></p>

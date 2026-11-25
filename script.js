@@ -166,23 +166,81 @@ function setBusy(button, busy, label) {
 }
 
 // Newsletter: subscribers are stored privately in Supabase. No public read access.
+
 $("#subscribeForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const form = e.currentTarget, button = form.querySelector("button[type=submit]");
-  if (!db) return setFeedback("#subscribeFeedback", "Connect your Supabase URL and anon key in script.js first.", true);
+
+  const form = e.currentTarget;
+  const button = form.querySelector('button[type="submit"]');
+  const feedback = $("#subscribeFeedback");
+
+  function showMessage(message, type = "success") {
+    feedback.textContent = message;
+    feedback.className = `form-feedback ${type}`;
+  }
+
+  if (!db) {
+    showMessage("Registration is temporarily unavailable. Please try again later.", "error");
+    return;
+  }
+
   const data = Object.fromEntries(new FormData(form));
+
+  const name = data.name.trim();
+  const email = data.email.trim().toLowerCase();
+  const confirmEmail = data.emailConfirm.trim().toLowerCase();
+
+  if (email !== confirmEmail) {
+    showMessage("Your email addresses don't match. Please check them.", "error");
+    return;
+  }
+
   setBusy(button, true);
-  const { error } = await db.from("newsletter_subscribers").insert({
-    name: data.name.trim(), email: data.email.trim().toLowerCase(), consent: true
-  });
-  setBusy(button, false);
-  if (error) {
-    const message = error.code === "23505" ? "This email is already on the list. Thank you for being here!" : "We couldn't save your signup. Please try again.";
-    setFeedback("#subscribeFeedback", message, error.code !== "23505");
-  } else {
-    form.reset(); setFeedback("#subscribeFeedback", "You're on the list. Welcome to THE MAILERS! ✉");
+  showMessage("Adding you to THE MAILERS...", "loading");
+
+  try {
+    const { error } = await db
+      .from("newsletter_subscribers")
+      .insert({
+        name,
+        email,
+        consent: true
+      });
+
+    if (error) {
+      if (error.code === "23505") {
+        showMessage(
+          "You're already part of THE MAILERS! ✉ No need to join again.",
+          "success"
+        );
+      } else {
+        console.error("Mailer signup error:", error);
+        showMessage(
+          "We couldn't complete your registration. Please try again.",
+          "error"
+        );
+      }
+      return;
+    }
+
+    form.reset();
+
+    showMessage(
+      "You're officially a Mailer! ✉ Welcome aboard. Your first delivery starts here.",
+      "success"
+    );
+
+  } catch (error) {
+    console.error("Signup connection error:", error);
+    showMessage(
+      "Connection problem. Please check your internet and try again.",
+      "error"
+    );
+  } finally {
+    setBusy(button, false);
   }
 });
+
 
 // Fan letters are saved to the database. Email alerts require an optional email/Edge Function setup.
 $("#letterForm").addEventListener("submit", async e => {

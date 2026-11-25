@@ -256,6 +256,29 @@
    overflow:hidden
 }
 
+
+.form-feedback {
+  display: block;
+  min-height: 22px;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+.form-feedback.success {
+  color: #22c55e;
+}
+
+.form-feedback.error {
+  color: #ef4444;
+}
+
+.form-feedback.loading {
+  color: #a855f7;
+}
+
+
 /* .join-decoration{
    position:absolute;
    right:38%;
