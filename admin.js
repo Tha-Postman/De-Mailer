@@ -823,31 +823,65 @@ try {
 
 // Forgot Password: request a secure recovery email.
 
-$("#forgotPasswordLink").addEventListener("click", async event => {
+
+// Custom Forgot Password Modal
+
+const forgotPasswordLink = $("#forgotPasswordLink");
+const forgotPasswordModal = $("#forgotPasswordModal");
+const forgotPasswordForm = $("#forgotPasswordForm");
+const forgotPasswordEmail = $("#forgotPasswordEmail");
+const cancelForgotPassword = $("#cancelForgotPassword");
+const sendResetLinkButton = $("#sendResetLinkButton");
+const forgotModalFeedback = $("#forgotModalFeedback");
+
+function closeForgotPasswordModal() {
+  forgotPasswordModal.hidden = true;
+  forgotPasswordForm.reset();
+  forgotModalFeedback.textContent = "";
+  forgotModalFeedback.classList.remove("error");
+}
+
+forgotPasswordLink.addEventListener("click", event => {
   event.preventDefault();
 
-  const emailInput = $('#adminLoginForm input[name="email"]');
+  const loginEmail = $('#adminLoginForm input[name="email"]');
+  forgotPasswordEmail.value = loginEmail.value.trim();
 
-  const email = prompt(
-    "Enter your admin email address:",
-    emailInput.value.trim()
-  );
+  forgotPasswordModal.hidden = false;
 
-  if (email === null) return;
+  setTimeout(() => forgotPasswordEmail.focus(), 100);
+});
 
-  const cleanEmail = email.trim().toLowerCase();
+cancelForgotPassword.addEventListener("click", closeForgotPasswordModal);
 
-  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-    feedback("#adminLoginFeedback", "Please enter a valid email address.", true);
+forgotPasswordModal.addEventListener("click", event => {
+  if (event.target === forgotPasswordModal) {
+    closeForgotPasswordModal();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !forgotPasswordModal.hidden) {
+    closeForgotPasswordModal();
+  }
+});
+
+forgotPasswordForm.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const email = forgotPasswordEmail.value.trim().toLowerCase();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    forgotModalFeedback.textContent = "Please enter a valid email address.";
+    forgotModalFeedback.classList.add("error");
     return;
   }
 
-  const link = $("#forgotPasswordLink");
+  sendResetLinkButton.disabled = true;
+  sendResetLinkButton.textContent = "Sending...";
 
-  link.style.pointerEvents = "none";
-  link.textContent = "Sending recovery email...";
-
-  feedback("#adminLoginFeedback", "Please wait while we process your request.");
+  forgotModalFeedback.textContent = "Please wait while we process your request.";
+  forgotModalFeedback.classList.remove("error");
 
   try {
     const response = await fetch("/api/request-admin-reset", {
@@ -855,30 +889,31 @@ $("#forgotPasswordLink").addEventListener("click", async event => {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ email: cleanEmail })
+      body: JSON.stringify({ email })
     });
 
     const result = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(
-        result.error || "Could not process your request. Please try again."
-      );
+      throw new Error(result.error || "Could not process your request. Please try again.");
     }
 
-    feedback(
-      "#adminLoginFeedback",
-      result.message || "If the address belongs to an admin account, a recovery email will be sent."
-    );
+    forgotModalFeedback.textContent =
+      result.message ||
+      "If the address belongs to an admin account, a recovery email will be sent.";
 
   } catch (error) {
-    feedback("#adminLoginFeedback", error.message, true);
+    forgotModalFeedback.textContent =
+      error.message || "Something went wrong. Please try again.";
+
+    forgotModalFeedback.classList.add("error");
 
   } finally {
-    link.style.pointerEvents = "";
-    link.textContent = "Forgot password?";
+    sendResetLinkButton.disabled = false;
+    sendResetLinkButton.textContent = "Send Reset Link";
   }
 });
+
 
 
 $("#adminLoginForm").addEventListener("submit", async e => {

@@ -76,7 +76,7 @@
       <article class="stat-card"><span>MEMBER ACCOUNTS</span><strong id="memberCount">—</strong></article>
     </div>
 
-    <section class="admin-panel">
+    <section class="admin-panel reset-panel">
       <div class="panel-heading">
         <div><h2>Your Mailers</h2><p>Export the subscriber email list as a CSV file.</p></div>
         <button class="button button-purple" id="exportSubscribers">Download CSV ↓</button>
@@ -171,7 +171,7 @@
     </section>
 
     
-    <section class="admin-panel">
+    <section class="admin-panel reset-panel">
       <div class="panel-heading">
         <div>
           <h2>Letters from fans</h2>
@@ -186,7 +186,7 @@
     </section>
 
 
-    <section class="admin-panel">
+    <section class="admin-panel reset-panel">
       <h2>Publish a letter</h2>
       <p>Write a public note that will appear in the Letters section.</p>
       <form id="publishLetterForm">
@@ -208,7 +208,7 @@
       </div>
     </section>
 
-    <section class="admin-panel">
+    <section class="admin-panel reset-panel">
       <h2>Members-only delivery</h2>
       <p>Publish an exclusive message inside the Mailers' Locker.</p>
       <form id="memberDeliveryForm">
@@ -232,5 +232,61 @@
 
   <p class="admin-footnote">Yours truly.</p>
 </main>
+
+<!-- Forgot Password Modal -->
+<div class="admin-modal" id="forgotPasswordModal" hidden>
+
+  <div class="admin-modal-box" role="dialog" aria-modal="true" aria-labelledby="forgotModalTitle">
+
+    <div class="admin-modal-icon">✉</div>
+
+    <h2 id="forgotModalTitle">Forgot your password?</h2>
+
+    <p>
+      Enter your administrator email address. If it belongs to an admin account,
+      we'll send you a secure password recovery link.
+    </p>
+
+    <form id="forgotPasswordForm">
+
+      <label>
+        Administrator email
+        <input
+          type="email"
+          id="forgotPasswordEmail"
+          placeholder="Enter your admin email"
+          autocomplete="email"
+          required
+        >
+      </label>
+
+      <div class="admin-modal-actions">
+        <button
+          type="button"
+          class="admin-modal-cancel"
+          id="cancelForgotPassword"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="button button-purple"
+          id="sendResetLinkButton"
+        >
+          Send Reset Link
+        </button>
+      </div>
+
+      <p
+        class="admin-modal-feedback"
+        id="forgotModalFeedback"
+        aria-live="polite"
+      ></p>
+
+    </form>
+
+  </div>
+</div>
 </body>
 </html>
