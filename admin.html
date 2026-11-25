@@ -50,7 +50,24 @@
     <p>Only an account explicitly authorized as an admin can access this dashboard.</p>
     <form id="adminLoginForm">
       <label>Admin email<input name="email" type="email" autocomplete="username" required></label>
-      <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+        <label>
+          Password
+          <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              id="adminLoginPassword"
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              required
+            >
+            <button
+              type="button"
+              class="password-toggle"
+              data-password="adminLoginPassword"
+            >Show</button>
+          </div>
+        </label>
 
       <button type="submit" class="button button-purple button-full">Sign In</button>
 
