@@ -43,8 +43,12 @@ async function loadDashboard(){
   $("#subscriberCount").textContent=subs.count ?? "—";
   $("#messageCount").textContent=msgs.count ?? "—";
   $("#memberCount").textContent=subs.count ?? "—";
-  $("#broadcastRecipientCount").textContent=subs.count ?? "—";
+  const { count: eligibleRecipients } = await db
+  .from("newsletter_subscribers")
+  .select("*", { count: "exact", head: true })
+  .eq("consent", true);
 
+$("#broadcastRecipientCount").textContent = eligibleRecipients ?? "—";
   const {data:subscribers,error}=await db.from("newsletter_subscribers").select("name,email,created_at").order("created_at",{ascending:false}).limit(5000);
   newsletterSubscribers = subscribers || [];
   $("#subscribersTable").innerHTML=error
@@ -257,9 +261,10 @@ document.addEventListener("submit", async event => {
 
   if (table === "public_letters") {
   updates.published = form.elements.published.checked;
-  updates.published_at = updates.published
-    ? new Date().toISOString()
-    : null;
+
+  if (updates.published) {
+    updates.published_at = new Date().toISOString();
+  }
 }
 
   const saveButton = form.querySelector('button[type="submit"]');
@@ -287,9 +292,12 @@ document.addEventListener("submit", async event => {
 
 // Broadcast Mailer: compose, preview and save a local draft only.
 // Live email delivery is intentionally disabled until a compliant sender is configured.
+
+// Broadcast Mailer: compose, preview, save and send.
+
 const BROADCAST_DRAFT_KEY = "deMailerBroadcastDraftV1";
 
-function getBroadcastDraft(){
+function getBroadcastDraft() {
   return {
     campaignType: $("#campaignType").value,
     subject: $("#broadcastSubject").value.trim(),
@@ -299,8 +307,9 @@ function getBroadcastDraft(){
   };
 }
 
-function setBroadcastDraft(draft){
-  if(!draft) return;
+function setBroadcastDraft(draft) {
+  if (!draft) return;
+
   $("#campaignType").value = draft.campaignType || "new-music";
   $("#broadcastSubject").value = draft.subject || "";
   $("#broadcastMessage").value = draft.message || "";
@@ -308,70 +317,201 @@ function setBroadcastDraft(draft){
   $("#broadcastButtonUrl").value = draft.buttonUrl || "";
 }
 
-function previewBroadcast(){
+function validateBroadcast(draft) {
+  if (!draft.subject || !draft.message) {
+    feedback("#broadcastFeedback", "Enter an email subject and message first.", true);
+    return false;
+  }
+
+  if (
+    draft.buttonUrl &&
+    !/^https:\/\/[^\s]+$/i.test(draft.buttonUrl)
+  ) {
+    feedback("#broadcastFeedback", "The optional link must begin with https://.", true);
+    return false;
+  }
+
+  return true;
+}
+
+function previewBroadcast() {
   const draft = getBroadcastDraft();
-  const preview = $("#broadcastPreview");
-  if(!draft.subject || !draft.message){
-    feedback("#broadcastFeedback","Add an email subject and message before previewing.",true);
-    return;
-  }
-  if(draft.buttonUrl && !/^https:\/\/[^\s]+$/i.test(draft.buttonUrl)){
-    feedback("#broadcastFeedback","For safety, the optional link must begin with https://.",true);
-    return;
-  }
+
+  if (!validateBroadcast(draft)) return;
 
   const typeLabels = {
-    "new-music":"NEW MUSIC",
-    birthday:"A SPECIAL WISH",
-    show:"SHOW ANNOUNCEMENT",
-    general:"A NOTE FROM DE MAILER"
+    "new-music": "NEW MUSIC",
+    birthday: "A SPECIAL WISH",
+    show: "SHOW ANNOUNCEMENT",
+    general: "A NOTE FROM DE MAILER"
   };
-  preview.innerHTML = `
-    <div class="preview-brand"><span>✉</span> DE MAILER <small>THE MAILERS</small></div>
-    <div class="preview-kicker">${esc(typeLabels[draft.campaignType] || "THE MAILERS")}</div>
+
+  $("#broadcastPreview").innerHTML = `
+    <div class="preview-brand">
+      <span>✉</span> DE MAILER <small>THE MAILERS</small>
+    </div>
+
+    <div class="preview-kicker">
+      ${esc(typeLabels[draft.campaignType] || "THE MAILERS")}
+    </div>
+
     <h3>${esc(draft.subject)}</h3>
-    <p class="preview-message">${esc(draft.message).replace(/\n/g,"<br>")}</p>
-    ${draft.buttonText && draft.buttonUrl ? `<div class="preview-link">${esc(draft.buttonText)} · ${esc(draft.buttonUrl)}</div>` : ""}
-    <div class="preview-signoff">Yours truly,<br><strong>De Mailer</strong></div>
+
+    <p class="preview-message">
+      ${esc(draft.message).replace(/\n/g, "<br>")}
+    </p>
+
+    ${
+      draft.buttonText && draft.buttonUrl
+        ? `<div class="preview-link">
+             ${esc(draft.buttonText)} · ${esc(draft.buttonUrl)}
+           </div>`
+        : ""
+    }
+
+    <div class="preview-signoff">
+      Yours truly,<br><strong>De Mailer</strong>
+    </div>
   `;
-  feedback("#broadcastFeedback","Preview updated. No email has been sent.");
+
+  feedback("#broadcastFeedback", "Email preview updated.");
 }
 
-$("#previewBroadcast").addEventListener("click",previewBroadcast);
+$("#previewBroadcast").addEventListener("click", previewBroadcast);
 
-$("#saveBroadcast").addEventListener("click",()=>{
+
+// Save draft.
+
+$("#saveBroadcast").addEventListener("click", () => {
   const draft = getBroadcastDraft();
-  if(!draft.subject || !draft.message){
-    return feedback("#broadcastFeedback","Add an email subject and message before saving.",true);
-  }
-  if(draft.buttonUrl && !/^https:\/\/[^\s]+$/i.test(draft.buttonUrl)){
-    return feedback("#broadcastFeedback","For safety, the optional link must begin with https://.",true);
-  }
-  try{
-    localStorage.setItem(BROADCAST_DRAFT_KEY,JSON.stringify(draft));
-    $("#broadcastStatus").textContent="Draft saved in this browser";
-    feedback("#broadcastFeedback","Draft saved on this device. It has not been sent.");
-  }catch(error){
-    feedback("#broadcastFeedback","Could not save the draft in this browser.",true);
+
+  if (!validateBroadcast(draft)) return;
+
+  try {
+    localStorage.setItem(BROADCAST_DRAFT_KEY, JSON.stringify(draft));
+
+    $("#broadcastStatus").textContent = "Draft saved";
+
+    feedback("#broadcastFeedback", "Your draft has been saved.");
+  } catch (error) {
+    feedback("#broadcastFeedback", "Could not save the draft in this browser.", true);
   }
 });
 
-$("#clearBroadcast").addEventListener("click",()=>{
+
+// Send broadcast through the secure Vercel API endpoint.
+
+$("#sendBroadcast").addEventListener("click", async () => {
+  const draft = getBroadcastDraft();
+
+  if (!validateBroadcast(draft)) return;
+
+  const recipientCount = Number($("#broadcastRecipientCount").textContent);
+
+  if (!recipientCount || recipientCount < 1) {
+    feedback("#broadcastFeedback", "There are no eligible subscribers to receive this broadcast.", true);
+    return;
+  }
+
+  const confirmed = confirm(
+    `Send this email to ${recipientCount} eligible subscribers?\n\nSubject: ${draft.subject}\n\nThis action cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  const button = $("#sendBroadcast");
+  const originalText = button.innerHTML;
+
+  button.disabled = true;
+  button.textContent = "Sending...";
+  feedback("#broadcastFeedback", "Sending your broadcast. Please wait...");
+
+  try {
+    const { data: { session }, error: sessionError } =
+      await db.auth.getSession();
+
+    if (sessionError || !session?.access_token) {
+      throw new Error("Your admin session has expired. Please sign in again.");
+    }
+
+    const response = await fetch("/api/send-broadcast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
+        subject: draft.subject,
+        message: draft.message,
+        buttonText: draft.buttonText,
+        buttonUrl: draft.buttonUrl
+      })
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.error || "Brevo could not accept your broadcast."
+      );
+    }
+
+    const accepted = result.recipientCount ?? recipientCount;
+
+    feedback(
+      "#broadcastFeedback",
+      `Success! Brevo accepted your broadcast for ${accepted} recipients.`
+    );
+
+    $("#broadcastStatus").textContent = "Last broadcast accepted";
+
+  } catch (error) {
+    feedback(
+      "#broadcastFeedback",
+      error.message || "Something went wrong while sending your broadcast.",
+      true
+    );
+
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+});
+
+
+// Clear composer.
+
+$("#clearBroadcast").addEventListener("click", () => {
   $("#broadcastForm").reset();
-  $("#broadcastPreview").innerHTML='<div class="preview-brand"><span>✉</span> DE MAILER <small>THE MAILERS</small></div><p class="preview-placeholder">Your email preview will appear here when you select “Preview email”.</p>';
-  $("#broadcastStatus").textContent="Draft not saved";
-  feedback("#broadcastFeedback","Composer cleared. Your previously saved draft remains in this browser.");
+
+  $("#broadcastPreview").innerHTML = `
+    <div class="preview-brand">
+      <span>✉</span> DE MAILER <small>THE MAILERS</small>
+    </div>
+    <p class="preview-placeholder">
+      Your email preview will appear here.
+    </p>
+  `;
+
+  $("#broadcastStatus").textContent = "Draft not saved";
+
+  feedback("#broadcastFeedback", "Composer cleared.");
 });
 
-try{
+
+// Restore previously saved draft.
+
+try {
   const savedDraft = localStorage.getItem(BROADCAST_DRAFT_KEY);
-  if(savedDraft){
+
+  if (savedDraft) {
     setBroadcastDraft(JSON.parse(savedDraft));
-    $("#broadcastStatus").textContent="Saved draft available";
+    $("#broadcastStatus").textContent = "Saved draft available";
   }
-}catch(error){
-  $("#broadcastStatus").textContent="No saved draft";
+} catch (error) {
+  $("#broadcastStatus").textContent = "No saved draft";
 }
+
 
 $("#adminLoginForm").addEventListener("submit", async e => {
   e.preventDefault();

@@ -72,10 +72,10 @@
         <span class="draft-status" id="broadcastStatus">Draft not saved</span>
       </div>
 
-      <div class="broadcast-notice" role="status">
+      <!-- <div class="broadcast-notice" role="status">
         <strong>Sending is not enabled yet.</strong>
         Your current sender address is flagged as non-compliant by Brevo. You can compose, preview and save broadcasts here, but this version will not send emails or contact subscribers.
-      </div>
+      </div> -->
 
       <div class="broadcast-grid">
         <form id="broadcastForm" class="broadcast-form">
@@ -105,10 +105,23 @@
           </label>
 
           <div class="broadcast-actions">
-            <button type="button" class="button button-purple" id="previewBroadcast">Preview email</button>
-            <button type="button" class="button button-soft" id="saveBroadcast">Save draft</button>
-            <button type="button" class="button button-text" id="clearBroadcast">Clear</button>
+            <button type="button" class="button button-purple" id="previewBroadcast">
+              Preview email
+            </button>
+
+            <button type="button" class="button button-soft" id="saveBroadcast">
+              Save draft
+            </button>
+
+            <button type="button" class="button button-purple" id="sendBroadcast">
+              <i class="fa-solid fa-paper-plane"></i> Send Broadcast
+            </button>
+
+            <button type="button" class="button button-text" id="clearBroadcast">
+              Clear
+            </button>
           </div>
+
           <p class="form-feedback" id="broadcastFeedback" aria-live="polite"></p>
         </form>
 
@@ -116,7 +129,7 @@
           <div class="recipient-card">
             <span class="mini-label">CURRENT AUDIENCE</span>
             <strong id="broadcastRecipientCount">—</strong>
-            <p>Newsletter subscribers in your existing Supabase list.</p>
+            <p>Newsletter subscribers in your existing Mailer's list.</p>
           </div>
           <div class="email-preview-wrap">
             <span class="mini-label">EMAIL PREVIEW</span>
@@ -125,7 +138,7 @@
               <p class="preview-placeholder">Your email preview will appear here when you select “Preview email”.</p>
             </article>
           </div>
-          <p class="broadcast-footnote">Drafts are saved in this browser only. They are not stored in Supabase and are not sent to anyone.</p>
+          <!-- <p class="broadcast-footnote">Drafts are saved in this browser only. They are not stored in Supabase and are not sent to anyone.</p> -->
         </aside>
       </div>
     </section>
