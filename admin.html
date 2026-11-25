@@ -354,6 +354,19 @@
           >
         </label>
 
+          <label id="emailVerificationGroup" hidden>
+          Six-digit verification code
+          <input
+            type="text"
+            id="emailVerificationCode"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            autocomplete="one-time-code"
+            placeholder="Enter the code sent to your new email"
+          >
+        </label>
+
         <button type="submit" class="button button-purple" id="changeEmailButton">
           Update Email Address
         </button>

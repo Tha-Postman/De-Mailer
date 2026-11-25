@@ -1019,75 +1019,137 @@ changePasswordForm.addEventListener("submit", async event => {
   }
 });
 
+
 // Admin Change Email Address
 
 const changeEmailForm = $("#changeEmailForm");
 const changeEmailButton = $("#changeEmailButton");
+const emailVerificationGroup = $("#emailVerificationGroup");
+const emailVerificationCode = $("#emailVerificationCode");
+
+let emailChangeCodeSent = false;
 
 changeEmailForm.addEventListener("submit", async event => {
   event.preventDefault();
 
-  const currentPassword = $("#emailChangeCurrentPassword").value;
-  const newEmail = $("#newAdminEmail").value.trim().toLowerCase();
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-    return feedback("#changeEmailFeedback", "Please enter a valid email address.", true);
-  }
+  const feedbackSelector = "#changeEmailFeedback";
 
   changeEmailButton.disabled = true;
-  changeEmailButton.textContent = "Verifying...";
 
   try {
-    const { data: { user }, error: userError } = await db.auth.getUser();
+    const { data: { session }, error: sessionError } =
+      await db.auth.getSession();
 
-    if (userError || !user?.email) {
-      throw new Error("Your admin session could not be verified. Please sign in again.");
+    if (sessionError || !session?.access_token) {
+      throw new Error("Your admin session has expired. Please sign in again.");
     }
 
-    if (newEmail === user.email.toLowerCase()) {
-      throw new Error("This is already your current email address.");
-    }
+    if (!emailChangeCodeSent) {
+      // Stage 1: Request verification code.
 
-    const { data: verifiedData, error: verifyError } =
-      await db.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword
+      const password = $("#emailChangeCurrentPassword").value;
+      const newEmail = $("#newAdminEmail").value.trim().toLowerCase();
+
+      if (!password || !newEmail) {
+        throw new Error("Enter your current password and new email address.");
+      }
+
+      changeEmailButton.textContent = "Sending code...";
+
+      const response = await fetch("/api/request-email-change", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          password,
+          newEmail
+        })
       });
 
-    if (verifyError) {
-      throw new Error("Your current password is incorrect.");
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "Could not send verification code.");
+      }
+
+      emailChangeCodeSent = true;
+      emailVerificationGroup.hidden = false;
+
+      $("#emailChangeCurrentPassword").disabled = true;
+      $("#newAdminEmail").readOnly = true;
+
+      emailVerificationCode.required = true;
+
+      changeEmailButton.textContent = "Confirm Email Change";
+
+      feedback(feedbackSelector, result.message);
+      emailVerificationCode.focus();
+
+    } else {
+      // Stage 2: Verify code and complete email change.
+
+      const code = emailVerificationCode.value.trim();
+
+      if (!/^\d{6}$/.test(code)) {
+        throw new Error("Enter the six-digit verification code.");
+      }
+
+      changeEmailButton.textContent = "Verifying code...";
+
+      const response = await fetch("/api/confirm-email-change", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ code })
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "Could not confirm your new email.");
+      }
+
+      // Update the email displayed in the admin dashboard.
+      if (result.email) {
+        $("#adminEmail").textContent = result.email;
+      }
+
+      changeEmailForm.reset();
+
+      emailChangeCodeSent = false;
+      emailVerificationGroup.hidden = true;
+      emailVerificationGroup.querySelector("input").required = false;
+
+      $("#emailChangeCurrentPassword").disabled = false;
+      $("#newAdminEmail").readOnly = false;
+
+      changeEmailButton.textContent = "Update Email Address";
+
+      feedback(feedbackSelector, result.message);
     }
-
-    if (verifiedData.user?.id !== user.id) {
-      throw new Error("Account verification failed. Please sign in again.");
-    }
-
-    changeEmailButton.textContent = "Sending confirmation...";
-
-    const { error: updateError } = await db.auth.updateUser({
-      email: newEmail
-    });
-
-    if (updateError) throw updateError;
-
-    changeEmailForm.reset();
-
-    feedback(
-      "#changeEmailFeedback",
-      "Email change requested. Check your email inboxes for the confirmation links and follow the instructions to complete the change."
-    );
 
   } catch (error) {
     feedback(
-      "#changeEmailFeedback",
-      error.message || "Could not update your email address. Please try again.",
+      feedbackSelector,
+      error.message || "Something went wrong. Please try again.",
       true
     );
+
   } finally {
     changeEmailButton.disabled = false;
-    changeEmailButton.textContent = "Update Email Address";
+
+    if (!emailChangeCodeSent) {
+      changeEmailButton.textContent = "Update Email Address";
+    } else if (changeEmailButton.textContent !== "Confirm Email Change") {
+      changeEmailButton.textContent = "Confirm Email Change";
+    }
   }
 });
+
 
 $("#adminLoginForm").addEventListener("submit", async e => {
   e.preventDefault();
