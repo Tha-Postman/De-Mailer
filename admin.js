@@ -915,6 +915,110 @@ forgotPasswordForm.addEventListener("submit", async event => {
 });
 
 
+// Admin Change Password
+
+const changePasswordForm = $("#changePasswordForm");
+const changePasswordButton = $("#changePasswordButton");
+
+document.querySelectorAll(".password-toggle").forEach(toggle => {
+  toggle.addEventListener("click", () => {
+    const input = document.getElementById(toggle.dataset.password);
+
+    if (!input) return;
+
+    const showing = input.type === "text";
+    input.type = showing ? "password" : "text";
+    toggle.textContent = showing ? "Show" : "Hide";
+  });
+});
+
+changePasswordForm.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const currentPassword = $("#currentAdminPassword").value;
+  const newPassword = $("#newAdminPassword").value;
+  const confirmPassword = $("#confirmAdminPassword").value;
+
+  const button = changePasswordButton;
+
+  if (newPassword.length < 8) {
+    return feedback(
+      "#changePasswordFeedback",
+      "Your new password must contain at least 8 characters.",
+      true
+    );
+  }
+
+  if (newPassword !== confirmPassword) {
+    return feedback(
+      "#changePasswordFeedback",
+      "Your new passwords do not match.",
+      true
+    );
+  }
+
+  if (currentPassword === newPassword) {
+    return feedback(
+      "#changePasswordFeedback",
+      "Your new password must be different from your current password.",
+      true
+    );
+  }
+
+  button.disabled = true;
+  button.textContent = "Verifying...";
+
+  try {
+    const { data: { user }, error: userError } = await db.auth.getUser();
+
+    if (userError || !user?.email) {
+      throw new Error("Your admin session could not be verified. Please sign in again.");
+    }
+
+    // Verify the current password before allowing a change.
+    const { error: verifyError } = await db.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword
+    });
+
+    if (verifyError) {
+      throw new Error("Your current password is incorrect.");
+    }
+
+    button.textContent = "Updating...";
+
+    const { error: updateError } = await db.auth.updateUser({
+      password: newPassword
+    });
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    changePasswordForm.reset();
+
+    document.querySelectorAll(".password-toggle").forEach(toggle => {
+      toggle.textContent = "Show";
+    });
+
+    feedback(
+      "#changePasswordFeedback",
+      "Your password has been changed successfully."
+    );
+
+  } catch (error) {
+    feedback(
+      "#changePasswordFeedback",
+      error.message || "Could not change your password. Please try again.",
+      true
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Update Password";
+  }
+});
+
 
 $("#adminLoginForm").addEventListener("submit", async e => {
   e.preventDefault();

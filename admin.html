@@ -76,7 +76,7 @@
       <article class="stat-card"><span>MEMBER ACCOUNTS</span><strong id="memberCount">—</strong></article>
     </div>
 
-    <section class="admin-panel reset-panel">
+    <section class="admin-panel">
       <div class="panel-heading">
         <div><h2>Your Mailers</h2><p>Export the subscriber email list as a CSV file.</p></div>
         <button class="button button-purple" id="exportSubscribers">Download CSV ↓</button>
@@ -171,7 +171,7 @@
     </section>
 
     
-    <section class="admin-panel reset-panel">
+    <section class="admin-panel">
       <div class="panel-heading">
         <div>
           <h2>Letters from fans</h2>
@@ -186,7 +186,7 @@
     </section>
 
 
-    <section class="admin-panel reset-panel">
+    <section class="admin-panel">
       <h2>Publish a letter</h2>
       <p>Write a public note that will appear in the Letters section.</p>
       <form id="publishLetterForm">
@@ -208,7 +208,7 @@
       </div>
     </section>
 
-    <section class="admin-panel reset-panel">
+    <section class="admin-panel">
       <h2>Members-only delivery</h2>
       <p>Publish an exclusive message inside the Mailers' Locker.</p>
       <form id="memberDeliveryForm">
@@ -228,6 +228,83 @@
         </div>
       </div>
     </section>
+
+    <!-- Account Security -->
+    <section class="admin-panel security-panel">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">ACCOUNT SECURITY</span>
+          <h2>Change Password</h2>
+          <p>Keep your Postmaster's Office account secure.</p>
+        </div>
+      </div>
+
+      <form id="changePasswordForm" class="security-form">
+
+        <label>
+          Current password
+          <div class="password-field">
+            <input
+              type="password"
+              id="currentAdminPassword"
+              autocomplete="current-password"
+              placeholder="Enter your current password"
+              required
+            >
+            <button type="button" class="password-toggle"
+              data-password="currentAdminPassword">Show</button>
+          </div>
+        </label>
+
+        <label>
+          New password
+          <div class="password-field">
+            <input
+              type="password"
+              id="newAdminPassword"
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Enter your new password"
+              required
+            >
+            <button type="button" class="password-toggle"
+              data-password="newAdminPassword">Show</button>
+          </div>
+        </label>
+
+        <label>
+          Confirm new password
+          <div class="password-field">
+            <input
+              type="password"
+              id="confirmAdminPassword"
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Confirm your new password"
+              required
+            >
+            <button type="button" class="password-toggle"
+              data-password="confirmAdminPassword">Show</button>
+          </div>
+        </label>
+
+        <button
+          type="submit"
+          class="button button-purple"
+          id="changePasswordButton"
+        >
+          Update Password
+        </button>
+
+        <p
+          class="form-feedback security-feedback"
+          id="changePasswordFeedback"
+          aria-live="polite"
+        ></p>
+
+      </form>
+    </section>
+
   </div>
 
   <p class="admin-footnote">Yours truly.</p>
