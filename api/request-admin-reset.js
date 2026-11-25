@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
     const linkData = await linkResponse.json();
 
     // Do not reveal whether an email belongs to an admin.
-    if (!linkResponse.ok || !linkData.user?.id || !linkData.hashed_token) {
+    if (!linkResponse.ok || !linkData.id || !linkData.hashed_token) {
       if (!linkResponse.ok) {
         console.error("Supabase recovery token generation failed:", linkData);
       }
@@ -74,7 +74,7 @@ module.exports = async function handler(req, res) {
 
     // Confirm that this Supabase user is an authorized admin.
     const adminResponse = await fetch(
-      `${supabaseUrl}/rest/v1/admin_users?select=user_id&user_id=eq.${encodeURIComponent(linkData.user.id)}`,
+      `${supabaseUrl}/rest/v1/admin_users?select=user_id&user_id=eq.${encodeURIComponent(linkData.id)}`,
       {
         headers: {
           apikey: SUPABASE_SERVICE_ROLE_KEY,
