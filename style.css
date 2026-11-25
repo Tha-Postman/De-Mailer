@@ -5,13 +5,13 @@
 .hero{
    min-height:650px;position:relative;display:flex;align-items:center;overflow:hidden;background:#211331;color:white}.hero-image{position:absolute;inset:0;background-image:url("assets/hero/DM_Cover1.png");background-size:cover;background-position:center 34%;opacity:.73}.hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(23,12,38,.94) 0%,rgba(31,15,50,.78) 48%,rgba(28,13,43,.15) 100%),linear-gradient(0deg,rgba(20,10,32,.42),transparent 45%)}.hero-content{position:relative;z-index:1;width:min(690px,90%);margin-left:max(9vw,28px);padding:100px 0}
 
-      .brand-mark {
+   .brand-mark {
    display: flex;
    align-items: center;
    justify-content: center;
    width: 42px;
    height: 42px;
-   color: #a855f7;
+   /* color: #a855f7; */
    transition: transform 0.35s ease;
    }
 
