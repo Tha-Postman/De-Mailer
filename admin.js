@@ -347,9 +347,22 @@ function previewBroadcast() {
   };
 
   $("#broadcastPreview").innerHTML = `
+  <header>
     <div class="preview-brand">
-      <span>✉</span> DE MAILER <small>THE MAILERS</small>
+      <span class="brand-mark">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="10" width="38" height="28" rx="5"
+        stroke="currentColor" stroke-width="2.8"/>
+      <path d="M7 14L24 27L41 14"
+        stroke="currentColor" stroke-width="2.8"
+        stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 36L19 25M41 36L29 25"
+        stroke="currentColor" stroke-width="2.8"
+        stroke-linecap="round"/>
+    </svg>
+    </span> DE MAILER <small>THE MAILERS</small>
     </div>
+  </header>
 
     <div class="preview-kicker">
       ${esc(typeLabels[draft.campaignType] || "THE MAILERS")}
