@@ -101,10 +101,56 @@ Object.entries(socials).forEach(([name, url]) => {
 });
 
 $("#year").textContent = new Date().getFullYear();
-$("#menuToggle").addEventListener("click", () => {
-  const nav = $("#mainNav"), open = nav.classList.toggle("open");
-  $("#menuToggle").setAttribute("aria-expanded", String(open));
+// $("#menuToggle").addEventListener("click", () => {
+//   const nav = $("#mainNav"), open = nav.classList.toggle("open");
+//   $("#menuToggle").setAttribute("aria-expanded", String(open));
+// });
+
+const menuToggle = $("#menuToggle");
+const mainNav = $("#mainNav");
+
+function closeMenu() {
+  mainNav.classList.remove("open");
+  menuToggle.setAttribute("aria-expanded", "false");
+  menuToggle.setAttribute("aria-label", "Open navigation");
+  menuToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+}
+
+menuToggle.addEventListener("click", () => {
+  const isOpen = mainNav.classList.toggle("open");
+
+  menuToggle.setAttribute("aria-expanded", String(isOpen));
+  menuToggle.setAttribute(
+    "aria-label",
+    isOpen ? "Close navigation" : "Open navigation"
+  );
+
+  menuToggle.innerHTML = isOpen
+    ? '<i class="fa-solid fa-xmark"></i>'
+    : '<i class="fa-solid fa-bars"></i>';
 });
+
+// Close after clicking any navigation link
+mainNav.querySelectorAll("a").forEach(link => {
+  link.addEventListener("click", closeMenu);
+});
+
+// Close when the user scrolls
+window.addEventListener("scroll", () => {
+  closeMenu();
+}, { passive: true });
+
+// Close when clicking outside the navigation
+document.addEventListener("click", (event) => {
+  if (
+    mainNav.classList.contains("open") &&
+    !mainNav.contains(event.target) &&
+    !menuToggle.contains(event.target)
+  ) {
+    closeMenu();
+  }
+});
+
 $("#mainNav").querySelectorAll("a").forEach(a => a.addEventListener("click", () => $("#mainNav").classList.remove("open")));
 
 function showToast(message) {
@@ -201,4 +247,21 @@ async function initSupabase() {
   await loadPublicLetters();
 
 }
+
+const backToTop = document.getElementById("backToTop");
+
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 300) {
+      backToTop.classList.add("show");
+    } else {
+      backToTop.classList.remove("show");
+    }
+  });
+
+  backToTop.addEventListener("click", () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+});
 initSupabase();
