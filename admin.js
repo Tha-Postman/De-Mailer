@@ -1019,6 +1019,75 @@ changePasswordForm.addEventListener("submit", async event => {
   }
 });
 
+// Admin Change Email Address
+
+const changeEmailForm = $("#changeEmailForm");
+const changeEmailButton = $("#changeEmailButton");
+
+changeEmailForm.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const currentPassword = $("#emailChangeCurrentPassword").value;
+  const newEmail = $("#newAdminEmail").value.trim().toLowerCase();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    return feedback("#changeEmailFeedback", "Please enter a valid email address.", true);
+  }
+
+  changeEmailButton.disabled = true;
+  changeEmailButton.textContent = "Verifying...";
+
+  try {
+    const { data: { user }, error: userError } = await db.auth.getUser();
+
+    if (userError || !user?.email) {
+      throw new Error("Your admin session could not be verified. Please sign in again.");
+    }
+
+    if (newEmail === user.email.toLowerCase()) {
+      throw new Error("This is already your current email address.");
+    }
+
+    const { data: verifiedData, error: verifyError } =
+      await db.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+
+    if (verifyError) {
+      throw new Error("Your current password is incorrect.");
+    }
+
+    if (verifiedData.user?.id !== user.id) {
+      throw new Error("Account verification failed. Please sign in again.");
+    }
+
+    changeEmailButton.textContent = "Sending confirmation...";
+
+    const { error: updateError } = await db.auth.updateUser({
+      email: newEmail
+    });
+
+    if (updateError) throw updateError;
+
+    changeEmailForm.reset();
+
+    feedback(
+      "#changeEmailFeedback",
+      "Email change requested. Check your email inboxes for the confirmation links and follow the instructions to complete the change."
+    );
+
+  } catch (error) {
+    feedback(
+      "#changeEmailFeedback",
+      error.message || "Could not update your email address. Please try again.",
+      true
+    );
+  } finally {
+    changeEmailButton.disabled = false;
+    changeEmailButton.textContent = "Update Email Address";
+  }
+});
 
 $("#adminLoginForm").addEventListener("submit", async e => {
   e.preventDefault();

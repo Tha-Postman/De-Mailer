@@ -303,7 +303,48 @@
         ></p>
 
       </form>
-    </section>
+      <div class="security-divider"></div>
+
+<div class="security-email-heading">
+  <h3>Change Email Address</h3>
+  <p>Update the email address connected to your administrator account.</p>
+</div>
+
+    <form id="changeEmailForm" class="security-form">
+        <label>
+          Current password
+          <div class="password-field">
+            <input
+              type="password"
+              id="emailChangeCurrentPassword"
+              autocomplete="current-password"
+              placeholder="Enter your current password"
+              required
+            >
+            <button type="button" class="password-toggle"
+              data-password="emailChangeCurrentPassword">Show</button>
+          </div>
+        </label>
+
+        <label>
+          New email address
+          <input
+            type="email"
+            id="newAdminEmail"
+            autocomplete="email"
+            placeholder="Enter your new email address"
+            required
+          >
+        </label>
+
+        <button type="submit" class="button button-purple" id="changeEmailButton">
+          Update Email Address
+        </button>
+
+        <p class="form-feedback security-feedback"
+          id="changeEmailFeedback" aria-live="polite"></p>
+      </form>
+  </section>
 
   </div>
 
