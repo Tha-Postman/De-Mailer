@@ -254,7 +254,7 @@ $("#letterForm").addEventListener("submit", async e => {
   });
   setBusy(button, false);
   if (error) setFeedback("#letterFeedback", "Your letter couldn't be delivered. Please try again.", true);
-  else { form.reset(); setFeedback("#letterFeedback", "Your letter has been delivered. Thank you for writing. ✉"); }
+  else { form.reset(); setFeedback("#letterFeedback", "Your letter has been delivered. Thank you for writing."); }
 });
 
 // Letters published by the Postmaster.

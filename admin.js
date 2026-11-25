@@ -58,17 +58,312 @@ $("#broadcastRecipientCount").textContent = eligibleRecipients ?? "—";
       : '<tr><td colspan="3">No subscribers yet.</td></tr>');
   $("#exportSubscribers").onclick=()=>downloadCSV(newsletterSubscribers);
 
-  const {data:messages,error:msgError}=await db.from("fan_messages").select("id,name,email,message,created_at").order("created_at",{ascending:false}).limit(300);
-  $("#fanMessages").innerHTML=msgError
-    ? "Could not load fan letters."
-    : (messages?.length
-      ? messages.map(m=>`<article class="fan-message"><header><strong>${esc(m.name)}</strong><span>${new Date(m.created_at).toLocaleString()}</span></header><small>${esc(m.email)}</small><p>${esc(m.message)}</p></article>`).join("")
-      : '<p class="empty-admin">No fan letters yet.</p>');
-      await Promise.all([
-      loadPublicLetters(),
-      loadMemberDeliveries()
-    ]);
+  
+  await loadFanMessages();
+
+  await Promise.all([
+    loadPublicLetters(),
+    loadMemberDeliveries()
+  ]);
+
 }
+
+
+async function loadFanMessages() {
+  const container = $("#fanMessages");
+
+  const { data: messages, error } = await db
+    .from("fan_messages")
+    .select("id,name,email,message,created_at,replied_at")
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  if (error) {
+    container.textContent = "Could not load fan letters: " + error.message;
+    return;
+  }
+
+  container.innerHTML = messages?.length
+    ? messages.map(m => `
+        <article class="fan-message" data-id="${esc(m.id)}">
+          <header>
+            <strong>${esc(m.name)}</strong>
+            <span>${new Date(m.created_at).toLocaleString()}</span>
+          </header>
+
+          <small>${esc(m.email)}</small>
+
+          <span class="fan-status ${m.replied_at ? "replied" : ""}">
+            ${m.replied_at ? "Replied" : "Awaiting reply"}
+          </span>
+
+          <p class="fan-original-message">${esc(m.message)}</p>
+
+          <div class="fan-actions">
+            <button type="button" class="button button-purple reply-fan"
+              data-id="${esc(m.id)}">Reply</button>
+
+            <button type="button" class="button button-soft edit-fan"
+              data-id="${esc(m.id)}">Edit</button>
+
+            <button type="button" class="button delete-record delete-fan"
+              data-id="${esc(m.id)}">Delete</button>
+          </div>
+
+          <form class="fan-reply-form hidden" data-id="${esc(m.id)}">
+            <label>To
+              <input type="email" value="${esc(m.email)}" readonly>
+            </label>
+
+            <label>Subject
+              <input name="subject" maxlength="160"
+                value="A personal reply from De Mailer" required>
+            </label>
+
+            <label>Your reply
+              <textarea name="message" rows="5" maxlength="10000"
+                placeholder="Write your reply..." required></textarea>
+            </label>
+
+            <div class="record-actions">
+              <button type="submit" class="button button-purple">
+                Send reply
+              </button>
+              <button type="button" class="button button-soft cancel-fan">
+                Cancel
+              </button>
+            </div>
+          </form>
+
+          <form class="fan-edit-form hidden" data-id="${esc(m.id)}">
+            <label>Name
+              <input name="name" value="${esc(m.name)}" required>
+            </label>
+
+            <label>Email
+              <input name="email" type="email" value="${esc(m.email)}" required>
+            </label>
+
+            <label>Fan letter
+              <textarea name="message" rows="5" required>${esc(m.message)}</textarea>
+            </label>
+
+            <div class="record-actions">
+              <button type="submit" class="button button-purple">
+                Save changes
+              </button>
+              <button type="button" class="button button-soft cancel-fan">
+                Cancel
+              </button>
+            </div>
+          </form>
+
+          <p class="fan-feedback" aria-live="polite"></p>
+        </article>
+      `).join("")
+    : '<p class="empty-admin">No fan letters yet.</p>';
+}
+
+
+// Fan letter management actions.
+
+$("#clearFanMessages").addEventListener("click", async () => {
+  const confirmed = confirm(
+    "This will permanently delete ALL fan letters. This cannot be undone. Continue?"
+  );
+
+  if (!confirmed) return;
+
+  const secondConfirmation = prompt(
+    'Type CLEAR ALL to confirm permanent deletion.'
+  );
+
+  if (secondConfirmation !== "CLEAR ALL") {
+    alert("Clear All cancelled.");
+    return;
+  }
+
+  const button = $("#clearFanMessages");
+  button.disabled = true;
+  button.textContent = "Clearing...";
+
+  const { error } = await db
+    .from("fan_messages")
+    .delete()
+    .not("id", "is", null);
+
+  if (error) {
+    alert("Could not clear fan letters: " + error.message);
+  } else {
+    await loadFanMessages();
+    $("#messageCount").textContent = "0";
+    alert("All fan letters have been cleared.");
+  }
+
+  button.disabled = false;
+  button.textContent = "Clear All";
+});
+
+
+document.addEventListener("click", async event => {
+  const replyButton = event.target.closest(".reply-fan");
+  const editButton = event.target.closest(".edit-fan");
+  const deleteButton = event.target.closest(".delete-fan");
+  const cancelButton = event.target.closest(".cancel-fan");
+
+  if (replyButton) {
+    const card = replyButton.closest(".fan-message");
+    card.querySelector(".fan-reply-form").classList.remove("hidden");
+    card.querySelector(".fan-edit-form").classList.add("hidden");
+    return;
+  }
+
+  if (editButton) {
+    const card = editButton.closest(".fan-message");
+    card.querySelector(".fan-edit-form").classList.remove("hidden");
+    card.querySelector(".fan-reply-form").classList.add("hidden");
+    return;
+  }
+
+  if (cancelButton) {
+    const card = cancelButton.closest(".fan-message");
+    card.querySelector(".fan-reply-form").classList.add("hidden");
+    card.querySelector(".fan-edit-form").classList.add("hidden");
+    return;
+  }
+
+  if (deleteButton) {
+    const id = deleteButton.dataset.id;
+
+    if (!confirm("Permanently delete this fan letter?")) return;
+
+    deleteButton.disabled = true;
+    deleteButton.textContent = "Deleting...";
+
+    const { error } = await db
+      .from("fan_messages")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert("Could not delete this fan letter: " + error.message);
+      deleteButton.disabled = false;
+      deleteButton.textContent = "Delete";
+      return;
+    }
+
+    await loadFanMessages();
+
+    const count = await db
+      .from("fan_messages")
+      .select("*", { count: "exact", head: true });
+
+    $("#messageCount").textContent = count.count ?? "—";
+  }
+});
+
+
+// Save edits to a fan letter.
+
+document.addEventListener("submit", async event => {
+  const editForm = event.target.closest(".fan-edit-form");
+  const replyForm = event.target.closest(".fan-reply-form");
+
+  if (editForm) {
+    event.preventDefault();
+
+    const id = editForm.dataset.id;
+    const formData = new FormData(editForm);
+
+    const updates = {
+      name: formData.get("name").trim(),
+      email: formData.get("email").trim(),
+      message: formData.get("message").trim()
+    };
+
+    const button = editForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.textContent = "Saving...";
+
+    const { error } = await db
+      .from("fan_messages")
+      .update(updates)
+      .eq("id", id);
+
+    if (error) {
+      alert("Could not update fan letter: " + error.message);
+      button.disabled = false;
+      button.textContent = "Save changes";
+      return;
+    }
+
+    await loadFanMessages();
+    return;
+  }
+
+  if (replyForm) {
+    event.preventDefault();
+
+    const id = replyForm.dataset.id;
+    const formData = new FormData(replyForm);
+
+    const button = replyForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.textContent = "Sending...";
+
+    const feedbackElement = replyForm
+      .closest(".fan-message")
+      .querySelector(".fan-feedback");
+
+    feedbackElement.textContent = "";
+
+    try {
+      const { data: { session }, error: sessionError } =
+        await db.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        throw new Error("Your admin session has expired. Please sign in again.");
+      }
+
+      const response = await fetch("/api/reply-fan-letter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          messageId: id,
+          subject: formData.get("subject").trim(),
+          message: formData.get("message").trim()
+        })
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Could not send your reply.");
+      }
+
+      if (result.warning) {
+        feedbackElement.textContent = result.warning;
+        feedbackElement.classList.add("error");
+      } else {
+        feedbackElement.textContent = "Your reply was accepted by Brevo.";
+        feedbackElement.classList.remove("error");
+      }
+
+      await loadFanMessages();
+
+    } catch (error) {
+      feedbackElement.textContent = error.message;
+      feedbackElement.classList.add("error");
+
+      button.disabled = false;
+      button.textContent = "Send reply";
+    }
+  }
+});
+
 
 function downloadCSV(rows){
   const fields=["name","email","created_at"],quote=v=>`"${String(v??"").replace(/"/g,'""')}"`;

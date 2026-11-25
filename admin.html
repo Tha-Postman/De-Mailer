@@ -108,7 +108,7 @@
           </label>
 
           <label>Email subject
-            <input name="subject" id="broadcastSubject" type="text" maxlength="160" placeholder="e.g. New music from De Mailer ✉" required>
+            <input name="subject" id="broadcastSubject" type="text" maxlength="160" placeholder="e.g. New music from De Mailer" required>
           </label>
 
           <label>Message
@@ -162,10 +162,21 @@
       </div>
     </section>
 
+    
     <section class="admin-panel">
-      <div class="panel-heading"><div><h2>Letters from fans</h2><p>Messages sent through Ask Tha Postman.</p></div></div>
+      <div class="panel-heading">
+        <div>
+          <h2>Letters from fans</h2>
+          <p>Messages sent through Ask Tha Postman.</p>
+        </div>
+        <button type="button" class="button delete-record" id="clearFanMessages">
+          Clear All
+        </button>
+      </div>
+
       <div id="fanMessages" class="message-list">Loading…</div>
     </section>
+
 
     <section class="admin-panel">
       <h2>Publish a letter</h2>
