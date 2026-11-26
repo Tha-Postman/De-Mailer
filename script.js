@@ -51,7 +51,14 @@ let tracks = [...fallbackTracks];
 
 // Add or replace these with your real profile URLs.
 const socials = {
-  instagram: "#", youtube: "#", facebook: "#", twitter: "#", tiktok: "#", listen: "#",
+  instagram: "",
+  tiktok: "",
+  youtube: "",
+  facebook: "",
+  twitter: "",
+  spotify: "",
+  apple_music: "",
+  twitch: ""
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -176,11 +183,61 @@ $("#showAllMusic").addEventListener("click", () => {
 });
 renderTracks();
 
-Object.entries(socials).forEach(([name, url]) => {
-  const link = document.querySelector(`[data-social="${name}"]`);
-  if (link && url && url !== "#") link.href = url;
-  else if (link) link.addEventListener("click", e => { e.preventDefault(); showToast(`Add your ${name} profile link in script.js.`); });
-});
+// Load social links managed from the admin dashboard.
+async function loadSocialLinks() {
+  if (!db) return;
+
+  const { data, error } = await db
+    .from("site_settings")
+    .select("value")
+    .eq("key", "social_links")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Social links could not be loaded:", error.message);
+    return;
+  }
+
+  if (data?.value) {
+    try {
+      const savedLinks = JSON.parse(data.value);
+
+      Object.keys(socials).forEach(platform => {
+        socials[platform] = savedLinks[platform] || "";
+      });
+    } catch (error) {
+      console.error("Invalid social links setting:", error);
+    }
+  }
+
+  Object.entries(socials).forEach(([platform, url]) => {
+    const link = document.querySelector(`[data-social="${platform}"]`);
+
+    if (!link) return;
+
+    let validUrl = "";
+
+    try {
+      const parsedUrl = new URL(url);
+
+      if (parsedUrl.protocol === "https:") {
+        validUrl = parsedUrl.href;
+      }
+    } catch {
+      // Invalid or empty links remain hidden.
+    }
+
+    if (validUrl) {
+      link.href = validUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.hidden = false;
+    } else {
+      link.removeAttribute("href");
+      link.hidden = true;
+    }
+  });
+}
 
 $("#year").textContent = new Date().getFullYear();
 // $("#menuToggle").addEventListener("click", () => {

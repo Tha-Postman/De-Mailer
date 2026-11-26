@@ -61,11 +61,12 @@ $("#broadcastRecipientCount").textContent = eligibleRecipients ?? "—";
   
   await loadFanMessages();
 
-  await Promise.all([
+await Promise.all([
   loadPublicLetters(),
   loadMemberDeliveries(),
   loadMusicDeliveries(),
-  loadLatestRelease()
+  loadLatestRelease(),
+  loadSocialLinks()
 ]);
 
 }
@@ -1726,6 +1727,207 @@ async function loadLatestRelease() {
   input.value = data?.value || "";
 }
 
+/* =========================================
+   SOCIAL MEDIA LINKS MANAGEMENT
+========================================= */
+
+const SOCIAL_PLATFORMS = [
+  "instagram",
+  "tiktok",
+  "youtube",
+  "facebook",
+  "twitter",
+  "spotify",
+  "apple_music",
+  "twitch"
+];
+
+async function loadSocialLinks() {
+  const form = $("#socialLinksForm");
+  if (!form) return;
+
+  const { data, error } = await db
+    .from("site_settings")
+    .select("value")
+    .eq("key", "social_links")
+    .maybeSingle();
+
+  if (error) {
+    feedback(
+      "#socialLinksFeedback",
+      "Could not load social links: " + error.message,
+      true
+    );
+    return;
+  }
+
+  let savedLinks = {};
+
+  if (data?.value) {
+    try {
+      savedLinks = JSON.parse(data.value);
+    } catch {
+      feedback(
+        "#socialLinksFeedback",
+        "The saved social links could not be read.",
+        true
+      );
+      return;
+    }
+  }
+
+  SOCIAL_PLATFORMS.forEach(platform => {
+    const input = form.elements[platform];
+
+    if (input) {
+      input.value = savedLinks[platform] || "";
+    }
+  });
+}
+
+
+function getSocialLinks() {
+  const form = $("#socialLinksForm");
+  const links = {};
+
+  SOCIAL_PLATFORMS.forEach(platform => {
+    const input = form.elements[platform];
+    const url = input.value.trim();
+
+    if (!url) {
+      links[platform] = "";
+      return;
+    }
+
+    try {
+      const parsedUrl = new URL(url);
+
+      if (
+        parsedUrl.protocol !== "https:" ||
+        !parsedUrl.hostname ||
+        parsedUrl.username ||
+        parsedUrl.password
+      ) {
+        throw new Error("Invalid URL");
+      }
+
+      links[platform] = parsedUrl.href;
+
+    } catch {
+      throw new Error(
+        `Enter a valid HTTPS link for ${platform.replace("_", " ")}.`
+      );
+    }
+  });
+
+  return links;
+}
+
+
+// Save social links.
+
+$("#socialLinksForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const button = $("#saveSocialLinks");
+
+  let links;
+
+  try {
+    links = getSocialLinks();
+  } catch (error) {
+    return feedback("#socialLinksFeedback", error.message, true);
+  }
+
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  try {
+    const { error } = await db
+      .from("site_settings")
+      .upsert({
+        key: "social_links",
+        value: JSON.stringify(links),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: "key"
+      });
+
+    if (error) throw error;
+
+    feedback(
+      "#socialLinksFeedback",
+      "Your social media links have been saved successfully."
+    );
+
+  } catch (error) {
+    feedback(
+      "#socialLinksFeedback",
+      error.message || "Could not save your social links.",
+      true
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Save Social Links";
+  }
+});
+
+
+// Clear all social links.
+
+$("#clearSocialLinks").addEventListener("click", async () => {
+  const confirmed = confirm(
+    "Are you sure you want to clear all social media links? This will hide all social icons on your public website."
+  );
+
+  if (!confirmed) return;
+
+  const form = $("#socialLinksForm");
+  const button = $("#clearSocialLinks");
+
+  button.disabled = true;
+  button.textContent = "Clearing...";
+
+  const emptyLinks = {};
+
+  SOCIAL_PLATFORMS.forEach(platform => {
+    emptyLinks[platform] = "";
+  });
+
+  try {
+    const { error } = await db
+      .from("site_settings")
+      .upsert({
+        key: "social_links",
+        value: JSON.stringify(emptyLinks),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: "key"
+      });
+
+    if (error) throw error;
+
+    form.reset();
+
+    feedback(
+      "#socialLinksFeedback",
+      "All social links have been cleared. Their icons will be hidden on your public website."
+    );
+
+  } catch (error) {
+    feedback(
+      "#socialLinksFeedback",
+      error.message || "Could not clear social links.",
+      true
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Clear All Links";
+  }
+});
+
 
 $("#latestReleaseForm").addEventListener("submit", async event => {
   event.preventDefault();
@@ -1789,6 +1991,177 @@ $("#latestReleaseForm").addEventListener("submit", async event => {
   } finally {
     button.disabled = false;
     button.textContent = "Update Latest Release";
+  }
+});
+
+/* =========================================
+   SOCIAL MEDIA LINKS SETTINGS
+========================================= */
+
+const SOCIAL_PLATFORMS = [
+  "instagram",
+  "tiktok",
+  "youtube",
+  "facebook",
+  "twitter",
+  "spotify",
+  "apple_music",
+  "twitch"
+];
+
+async function loadSocialLinks() {
+  const form = $("#socialLinksForm");
+  if (!form) return;
+
+  const { data, error } = await db
+    .from("site_settings")
+    .select("value")
+    .eq("key", "social_links")
+    .maybeSingle();
+
+  if (error) {
+    feedback(
+      "#socialLinksFeedback",
+      "Could not load social links: " + error.message,
+      true
+    );
+    return;
+  }
+
+  if (!data?.value) return;
+
+  try {
+    const savedLinks = JSON.parse(data.value);
+
+    SOCIAL_PLATFORMS.forEach(platform => {
+      const input = form.elements[platform];
+
+      if (input) {
+        input.value = savedLinks[platform] || "";
+      }
+    });
+
+  } catch (error) {
+    feedback(
+      "#socialLinksFeedback",
+      "The saved social links could not be read.",
+      true
+    );
+  }
+}
+
+
+async function saveSocialLinks() {
+  const form = $("#socialLinksForm");
+  const links = {};
+
+  for (const platform of SOCIAL_PLATFORMS) {
+    const input = form.elements[platform];
+    const url = input.value.trim();
+
+    if (!url) {
+      links[platform] = "";
+      continue;
+    }
+
+    try {
+      const parsedUrl = new URL(url);
+
+      if (parsedUrl.protocol !== "https:") {
+        throw new Error();
+      }
+
+      links[platform] = parsedUrl.href;
+
+    } catch {
+      feedback(
+        "#socialLinksFeedback",
+        `Enter a valid HTTPS link for ${platform.replace("_", " ")}.`,
+        true
+      );
+
+      input.focus();
+      return false;
+    }
+  }
+
+  const { error } = await db
+    .from("site_settings")
+    .upsert({
+      key: "social_links",
+      value: JSON.stringify(links),
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: "key"
+    });
+
+  if (error) {
+    feedback(
+      "#socialLinksFeedback",
+      "Could not save social links: " + error.message,
+      true
+    );
+    return false;
+  }
+
+  feedback(
+    "#socialLinksFeedback",
+    "Your social media links have been saved successfully."
+  );
+
+  return true;
+}
+
+
+// Save social links.
+$("#socialLinksForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const button = $("#saveSocialLinks");
+
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  try {
+    await saveSocialLinks();
+  } finally {
+    button.disabled = false;
+    button.textContent = "Save Social Links";
+  }
+});
+
+
+// Clear all social links.
+$("#clearSocialLinks").addEventListener("click", async () => {
+  const confirmed = confirm(
+    "Clear all social media links? This will hide all social icons on your public website."
+  );
+
+  if (!confirmed) return;
+
+  const form = $("#socialLinksForm");
+  const button = $("#clearSocialLinks");
+
+  button.disabled = true;
+  button.textContent = "Clearing...";
+
+  SOCIAL_PLATFORMS.forEach(platform => {
+    form.elements[platform].value = "";
+  });
+
+  try {
+    const saved = await saveSocialLinks();
+
+    if (!saved) {
+      feedback(
+        "#socialLinksFeedback",
+        "The links were cleared from the form, but could not be saved.",
+        true
+      );
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = "Clear All Links";
   }
 });
 
