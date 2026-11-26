@@ -1227,6 +1227,86 @@ function getStoragePath(publicUrl) {
   return decodeURIComponent(publicUrl.slice(index + marker.length));
 }
 
+
+function renderAdminMusicDeliveries(search = "") {
+  const container = $("#musicDeliveriesList");
+  const count = $("#adminMusicSearchCount");
+
+  const songs = window.adminMusicDeliveries || [];
+  const query = search.trim().toLowerCase();
+
+  const matches = songs.filter(song =>
+    `${song.title || ""} ${song.year || ""} ${song.tag || ""}`
+      .toLowerCase()
+      .includes(query)
+  );
+
+  if (count) {
+    count.textContent = `${matches.length} ${
+      matches.length === 1 ? "song found" : "songs found"
+    }`;
+  }
+
+  container.innerHTML = matches.length
+    ? matches.map(song => `
+        <article class="managed-record">
+          <div class="music-admin-record">
+            ${
+              song.artwork_url
+                ? `<img src="${esc(song.artwork_url)}"
+                    alt="${esc(song.title)} artwork" loading="lazy">`
+                : `<div class="music-artwork-placeholder">♫</div>`
+            }
+
+            <div class="record-info">
+              <strong>${esc(song.title)}</strong>
+
+              <span>
+                ${esc(song.year || "Year not set")}
+                · ${esc(song.tag || "No tag")}
+              </span>
+
+              <span class="music-status ${song.is_published ? "" : "unpublished"}">
+                ${song.is_published ? "Published" : "Unpublished"}
+              </span>
+
+              ${
+                song.listen_url
+                  ? `<a href="${esc(song.listen_url)}"
+                      target="_blank"
+                      rel="noopener noreferrer">
+                      Open listening link ↗
+                    </a>`
+                  : ""
+              }
+            </div>
+          </div>
+
+          <div class="record-actions">
+            <button
+              type="button"
+              class="button button-soft edit-music"
+              data-id="${esc(song.id)}">
+              Edit
+            </button>
+
+            <button
+              type="button"
+              class="button delete-record delete-music"
+              data-id="${esc(song.id)}">
+              Delete
+            </button>
+          </div>
+        </article>
+      `).join("")
+    : `<p class="empty-admin">${
+        query
+          ? "No songs match your search. Try another title or year."
+          : "No songs have been added yet. Add your first delivery above."
+      }</p>`;
+}
+
+
 async function loadMusicDeliveries() {
   const container = $("#musicDeliveriesList");
   if (!container) return;
@@ -1236,6 +1316,7 @@ async function loadMusicDeliveries() {
   const { data, error } = await db
     .from("music_deliveries")
     .select("*")
+    .order("year", { ascending: false, nullsFirst: false })
     .order("sort_order", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -1244,53 +1325,19 @@ async function loadMusicDeliveries() {
     return;
   }
 
-  container.innerHTML = data?.length
-    ? data.map(song => `
-        <article class="managed-record">
-          <div class="music-admin-record">
-            ${
-              song.artwork_url
-                ? `<img src="${esc(song.artwork_url)}" alt="${esc(song.title)} artwork" loading="lazy">`
-                : `<div class="music-artwork-placeholder">♫</div>`
-            }
-
-            <div class="record-info">
-              <strong>${esc(song.title)}</strong>
-
-              <span>${esc(song.year || "Year not set")} · ${esc(song.tag || "No tag")}</span>
-
-              <span class="music-status ${song.is_published ? "" : "unpublished"}">
-                ${song.is_published ? "Published" : "Unpublished"}
-              </span>
-
-              ${
-                song.listen_url
-                  ? `<a href="${esc(song.listen_url)}" target="_blank" rel="noopener noreferrer">Open listening link ↗</a>`
-                  : ""
-              }
-            </div>
-          </div>
-
-          <div class="record-actions">
-            <button type="button"
-              class="button button-soft edit-music"
-              data-id="${esc(song.id)}">
-              Edit
-            </button>
-
-            <button type="button"
-              class="button delete-record delete-music"
-              data-id="${esc(song.id)}">
-              Delete
-            </button>
-          </div>
-        </article>
-      `).join("")
-    : '<p class="empty-admin">No songs have been added yet. Add your first delivery above.</p>';
-
-  // Keep the current catalogue available for editing.
   window.adminMusicDeliveries = data || [];
+
+  renderAdminMusicDeliveries(
+    $("#adminMusicSearch")?.value || ""
+  );
 }
+
+
+// Search immediately as you type.
+$("#adminMusicSearch").addEventListener("input", event => {
+  renderAdminMusicDeliveries(event.target.value);
+});
+
 
 
 // Add or update a song.
@@ -1528,31 +1575,88 @@ document.addEventListener("click", async event => {
   }
 
   if (deleteButton) {
-    const song = (window.adminMusicDeliveries || [])
-      .find(item => item.id === deleteButton.dataset.id);
+  const song = (window.adminMusicDeliveries || [])
+    .find(item => item.id === deleteButton.dataset.id);
 
-    if (!song) return;
+  if (!song) return;
 
-    if (!confirm(`Permanently delete "${song.title}" from Music Deliveries?`)) {
-      return;
-    }
+  pendingMusicDelete = song;
 
-    deleteButton.disabled = true;
-    deleteButton.textContent = "Deleting...";
+  $("#deleteMusicSongTitle").textContent =
+    `${song.title} (${song.year || "year not set"})`;
 
+  feedback("#deleteMusicFeedback", "");
+
+  $("#deleteMusicModal").hidden = false;
+  $("#confirmDeleteMusic").disabled = false;
+  $("#confirmDeleteMusic").textContent = "Delete song";
+
+  $("#cancelDeleteMusic").focus();
+  return;
+}
+
+
+/* =========================================
+   CUSTOM MUSIC DELETE MODAL
+========================================= */
+
+let pendingMusicDelete = null;
+
+function closeDeleteMusicModal() {
+  $("#deleteMusicModal").hidden = true;
+  pendingMusicDelete = null;
+
+  $("#confirmDeleteMusic").disabled = false;
+  $("#confirmDeleteMusic").textContent = "Delete song";
+
+  feedback("#deleteMusicFeedback", "");
+}
+
+
+// Cancel deletion.
+$("#cancelDeleteMusic").addEventListener("click", closeDeleteMusicModal);
+
+
+// Clicking the backdrop also closes the modal.
+$("#deleteMusicModal").addEventListener("click", event => {
+  if (event.target === $("#deleteMusicModal")) {
+    closeDeleteMusicModal();
+  }
+});
+
+
+// Escape closes the modal.
+document.addEventListener("keydown", event => {
+  if (
+    event.key === "Escape" &&
+    !$("#deleteMusicModal").hidden
+  ) {
+    closeDeleteMusicModal();
+  }
+});
+
+
+// Confirm permanent deletion.
+$("#confirmDeleteMusic").addEventListener("click", async () => {
+  if (!pendingMusicDelete) return;
+
+  const song = pendingMusicDelete;
+  const button = $("#confirmDeleteMusic");
+
+  button.disabled = true;
+  button.textContent = "Deleting...";
+
+  feedback("#deleteMusicFeedback", "");
+
+  try {
     const { error } = await db
       .from("music_deliveries")
       .delete()
       .eq("id", song.id);
 
-    if (error) {
-      alert("Could not delete this song: " + error.message);
-      deleteButton.disabled = false;
-      deleteButton.textContent = "Delete";
-      return;
-    }
+    if (error) throw error;
 
-    // Remove its artwork from storage as well.
+    // Clean up artwork stored in Supabase Storage.
     const artworkPath = getStoragePath(song.artwork_url);
 
     if (artworkPath) {
@@ -1561,11 +1665,31 @@ document.addEventListener("click", async event => {
         .remove([artworkPath]);
 
       if (storageError) {
-        console.warn("Song deleted, but artwork cleanup failed:", storageError.message);
+        console.warn(
+          "Song deleted, but artwork cleanup failed:",
+          storageError.message
+        );
       }
     }
 
+    closeDeleteMusicModal();
+
     await loadMusicDeliveries();
+
+    feedback(
+      "#musicDeliveryFeedback",
+      `"${song.title}" has been deleted from Music Deliveries.`
+    );
+
+  } catch (error) {
+    feedback(
+      "#deleteMusicFeedback",
+      error.message || "Could not delete this song. Please try again.",
+      true
+    );
+
+    button.disabled = false;
+    button.textContent = "Try again";
   }
 });
 

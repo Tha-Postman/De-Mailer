@@ -71,6 +71,7 @@ async function loadMusicDeliveries() {
     .from("music_deliveries")
     .select("title,year,tag,artwork_url,listen_url,spotify_url,apple_url,youtube_url,snippet,sort_order")
     .eq("is_published", true)
+    .order("year", { ascending: false, nullsFirst: false })
     .order("sort_order", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -136,7 +137,13 @@ async function loadLatestRelease() {
 }
 
 function renderTracks(search = "") {
-  const matches = tracks.filter(track => `${track.title} ${track.year} ${track.tag}`.toLowerCase().includes(search.toLowerCase()));
+  const matches = tracks
+  .filter(track =>
+    `${track.title} ${track.year} ${track.tag}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  )
+  .sort((a, b) => Number(b.year || 0) - Number(a.year || 0));
   const visible = showAllTracks || search ? matches : matches.slice(0, 4);
   $("#musicCount").textContent = `${matches.length} ${matches.length === 1 ? "delivery" : "deliveries"}`;
   if (!visible.length) {
@@ -151,8 +158,6 @@ function renderTracks(search = "") {
       </div>
       <div class="track-meta"><span class="track-tag">${escapeHTML(track.tag || "Release")}</span><span class="track-year">${escapeHTML(track.year)}</span></div>
       <h3>${escapeHTML(track.title)}</h3>
-
-      ${track.snippet ? `<audio class="audio-player" controls preload="none" src="${escapeHTML(track.snippet)}">Your browser does not support audio.</audio>` : '<p class="no-preview"></p>'}
 
       <div class="stream-links">
         ${track.spotify && track.spotify !== "#" ? `<a href="${escapeHTML(track.spotify)}" target="_blank" rel="noopener">Spotify ↗</a>` : ""}

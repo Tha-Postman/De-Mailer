@@ -482,3 +482,56 @@ body {
     transition: none;
   }
 }
+
+
+/* =========================================
+   INDEPENDENT CONTENT SCROLL AREAS
+========================================= */
+
+/* Music catalogue */
+.music-grid {
+  max-height: min(760px, 75vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-content: start;
+  padding-right: 8px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Letters from Tha Postman */
+.letters-grid {
+  max-height: min(550px, 65vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-content: start;
+  padding: 2px 8px 2px 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Mailers' Locker deliveries */
+#memberLetters {
+  max-height: min(350px, 45vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-right: 8px;
+}
+
+/* Smaller screens */
+@media (max-width: 650px) {
+  .music-grid {
+    max-height: 68vh;
+    gap: 12px;
+  }
+
+  .letters-grid {
+    max-height: 60vh;
+  }
+
+  #memberLetters {
+    max-height: 42vh;
+  }
+}

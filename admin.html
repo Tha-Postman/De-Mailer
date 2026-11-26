@@ -182,16 +182,30 @@
               aria-live="polite"></p>
           </form>
 
+          
           <div class="managed-content">
             <div class="managed-heading">
               <h3>Your music catalogue</h3>
               <span>Manage existing music deliveries</span>
             </div>
 
+            <label class="music-search-label" for="adminMusicSearch">
+              Find a song
+              <input
+                type="search"
+                id="adminMusicSearch"
+                placeholder="Search by song title, year or tag..."
+                autocomplete="off"
+              >
+            </label>
+
+            <p id="adminMusicSearchCount" class="music-search-count"></p>
+
             <div id="musicDeliveriesList" class="record-list">
               Loading music catalogue...
             </div>
           </div>
+
         </section>
 
         <!-- LATEST RELEASE SETTINGS -->
