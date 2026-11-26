@@ -182,6 +182,49 @@
               aria-live="polite"></p>
           </form>
 
+
+          <div id="deleteMusicModal" class="modal-overlay" hidden>
+              <div class="modal-card" role="dialog"
+                aria-modal="true"
+                aria-labelledby="deleteMusicHeading">
+
+                <span class="eyebrow">THE SOUND ARCHIVE</span>
+
+                <h2 id="deleteMusicHeading">Delete this song?</h2>
+
+                <p>
+                  Are you sure you want to delete
+                  <strong id="deleteMusicSongTitle"></strong>?
+                </p>
+
+                <p>This action cannot be undone.</p>
+
+                <p
+                  id="deleteMusicFeedback"
+                  class="form-feedback"
+                  aria-live="polite">
+                </p>
+
+                <div class="broadcast-actions">
+                  <button
+                    type="button"
+                    class="button button-soft"
+                    id="cancelDeleteMusic">
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    class="button button-purple"
+                    id="confirmDeleteMusic">
+                    Delete song
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+
           
           <div class="managed-content">
             <div class="managed-heading">
