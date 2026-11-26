@@ -535,3 +535,6 @@ body {
     max-height: 42vh;
   }
 }
+.social-links a[hidden] {
+  display: none !important;
+}

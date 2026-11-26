@@ -238,6 +238,7 @@ async function loadSocialLinks() {
     }
   });
 }
+loadSocialLinks();
 
 $("#year").textContent = new Date().getFullYear();
 // $("#menuToggle").addEventListener("click", () => {
