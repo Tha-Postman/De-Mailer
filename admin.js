@@ -1594,6 +1594,9 @@ document.addEventListener("click", async event => {
   $("#cancelDeleteMusic").focus();
   return;
 }
+});
+
+// End of the music edit/delete click listener.
 
 
 /* =========================================
