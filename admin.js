@@ -1998,17 +1998,6 @@ $("#latestReleaseForm").addEventListener("submit", async event => {
    SOCIAL MEDIA LINKS SETTINGS
 ========================================= */
 
-const SOCIAL_PLATFORMS = [
-  "instagram",
-  "tiktok",
-  "youtube",
-  "facebook",
-  "twitter",
-  "spotify",
-  "apple_music",
-  "twitch"
-];
-
 async function loadSocialLinks() {
   const form = $("#socialLinksForm");
   if (!form) return;
