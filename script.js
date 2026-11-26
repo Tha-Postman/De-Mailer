@@ -11,7 +11,7 @@ const db = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_A
 
 // EDIT YOUR MUSIC HERE. Leave snippet blank if you don't have a preview.
 // Use paths such as assets/music/song-name.mp3 and assets/music/song-name.jpg.
-const tracks = [
+const fallbackTracks = [
 
   // { title: "Since 99", year: "2026", tag: "Latest release", artwork: "assets/artwork/Since_99.jpeg", snippet: "assets/music/since-99.mp3", spotify: "https://found.ee/Since99/ms-spotify-3", apple: "https://found.ee/Since99/ms-apple-0", youtube: "#" },
 
@@ -40,11 +40,14 @@ const tracks = [
   { title: "The Mirror", year: "2026", tag: "Single", artwork: "assets/artwork/the_mirror.PNG", listen: "https://fanlink.tv/Themirror" },
 
 
-  { title: "Orente", year: "2025", tag: "Latest release", artwork: "assets/artwork/orente.PNG", listen: "#" },
+  { title: "Orente", year: "2025", tag: "Single", artwork: "assets/artwork/orente.PNG", listen: "#" },
 
-  { title: "Bamise", year: "2024", tag: "Latest release", artwork: "assets/artwork/bamise.PNG", listen: "#" },
+  { title: "Bamise", year: "2024", tag: "Single", artwork: "assets/artwork/bamise.PNG", listen: "#" },
   
 ];
+
+// The original catalogue remains available as a fallback.
+let tracks = [...fallbackTracks];
 
 // Add or replace these with your real profile URLs.
 const socials = {
@@ -58,6 +61,80 @@ let showAllTracks = false;
 function escapeHTML(value = "") {
   return String(value).replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
 }
+
+// Load published music from Supabase.
+// If the request fails, the original fallback catalogue remains visible.
+async function loadMusicDeliveries() {
+  if (!db) return;
+
+  const { data, error } = await db
+    .from("music_deliveries")
+    .select("title,year,tag,artwork_url,listen_url,spotify_url,apple_url,youtube_url,snippet,sort_order")
+    .eq("is_published", true)
+    .order("sort_order", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Music catalogue could not be loaded:", error.message);
+    return;
+  }
+
+  if (!data || !data.length) {
+    console.warn("No published songs found. Keeping the fallback catalogue.");
+    return;
+  }
+
+  tracks = data.map(song => ({
+    title: song.title,
+    year: song.year ? String(song.year) : "",
+    tag: song.tag || "Release",
+    artwork: song.artwork_url || "",
+    listen: song.listen_url || "",
+    spotify: song.spotify_url || "",
+    apple: song.apple_url || "",
+    youtube: song.youtube_url || "",
+    snippet: song.snippet || ""
+  }));
+
+  renderTracks($("#musicSearch").value);
+}
+
+// Load the latest release embed URL managed from the admin dashboard.
+async function loadLatestRelease() {
+  if (!db) return;
+
+  const iframe = $("#latestReleaseIframe");
+  if (!iframe) return;
+
+  const { data, error } = await db
+    .from("site_settings")
+    .select("value")
+    .eq("key", "latest_release_embed_url")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Latest Release setting could not be loaded:", error.message);
+    return;
+  }
+
+  if (!data?.value) return;
+
+  try {
+    const url = new URL(data.value);
+
+    const validSpotifyEmbed =
+      url.protocol === "https:" &&
+      url.hostname === "open.spotify.com" &&
+      /^\/embed\/(track|album)\/[A-Za-z0-9]+\/?$/.test(url.pathname);
+
+    if (validSpotifyEmbed) {
+      iframe.src = url.href;
+    }
+  } catch (error) {
+    console.error("Invalid Latest Release embed URL:", error);
+  }
+}
+
 function renderTracks(search = "") {
   const matches = tracks.filter(track => `${track.title} ${track.year} ${track.tag}`.toLowerCase().includes(search.toLowerCase()));
   const visible = showAllTracks || search ? matches : matches.slice(0, 4);
@@ -302,8 +379,12 @@ $("#lockerClose").addEventListener("click", () => {
 });
 async function initSupabase() {
   if (!db) return;
-  await loadPublicLetters();
 
+  await Promise.all([
+    loadPublicLetters(),
+    loadMusicDeliveries(),
+    loadLatestRelease()
+  ]);
 }
 
 const backToTop = document.getElementById("backToTop");

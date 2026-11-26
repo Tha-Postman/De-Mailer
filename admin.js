@@ -62,9 +62,11 @@ $("#broadcastRecipientCount").textContent = eligibleRecipients ?? "—";
   await loadFanMessages();
 
   await Promise.all([
-    loadPublicLetters(),
-    loadMemberDeliveries()
-  ]);
+  loadPublicLetters(),
+  loadMemberDeliveries(),
+  loadMusicDeliveries(),
+  loadLatestRelease()
+]);
 
 }
 
@@ -1185,6 +1187,484 @@ $("#memberDeliveryForm").addEventListener("submit",async e=>{
   await loadMemberDeliveries();
 }
 });
+
+(async()=>{
+  if(!db){
+    $("#adminLogin").classList.remove("hidden");
+    return feedback("#adminLoginFeedback","First configure your Supabase URL and anon key in admin.js.",true);
+  }
+  const {data:{session}}=await db.auth.getSession();
+  await requireAdmin(session?.user||null);
+})();
+
+
+
+/* =========================================
+   MUSIC DELIVERIES MANAGEMENT
+========================================= */
+
+const MUSIC_BUCKET = "music-artwork";
+
+function resetMusicForm() {
+  $("#musicDeliveryForm").reset();
+  $("#musicDeliveryId").value = "";
+  $("#musicSortOrder").value = "0";
+  $("#musicPublished").checked = true;
+  $("#musicArtwork").required = false;
+  $("#saveMusicDelivery").textContent = "Add song";
+  $("#cancelMusicEdit").hidden = true;
+  feedback("#musicDeliveryFeedback", "");
+}
+
+function getStoragePath(publicUrl) {
+  if (!publicUrl) return null;
+
+  const marker = `/storage/v1/object/public/${MUSIC_BUCKET}/`;
+  const index = publicUrl.indexOf(marker);
+
+  if (index === -1) return null;
+
+  return decodeURIComponent(publicUrl.slice(index + marker.length));
+}
+
+async function loadMusicDeliveries() {
+  const container = $("#musicDeliveriesList");
+  if (!container) return;
+
+  container.textContent = "Loading music catalogue...";
+
+  const { data, error } = await db
+    .from("music_deliveries")
+    .select("*")
+    .order("sort_order", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    container.textContent = "Could not load music: " + error.message;
+    return;
+  }
+
+  container.innerHTML = data?.length
+    ? data.map(song => `
+        <article class="managed-record">
+          <div class="music-admin-record">
+            ${
+              song.artwork_url
+                ? `<img src="${esc(song.artwork_url)}" alt="${esc(song.title)} artwork" loading="lazy">`
+                : `<div class="music-artwork-placeholder">♫</div>`
+            }
+
+            <div class="record-info">
+              <strong>${esc(song.title)}</strong>
+
+              <span>${esc(song.year || "Year not set")} · ${esc(song.tag || "No tag")}</span>
+
+              <span class="music-status ${song.is_published ? "" : "unpublished"}">
+                ${song.is_published ? "Published" : "Unpublished"}
+              </span>
+
+              ${
+                song.listen_url
+                  ? `<a href="${esc(song.listen_url)}" target="_blank" rel="noopener noreferrer">Open listening link ↗</a>`
+                  : ""
+              }
+            </div>
+          </div>
+
+          <div class="record-actions">
+            <button type="button"
+              class="button button-soft edit-music"
+              data-id="${esc(song.id)}">
+              Edit
+            </button>
+
+            <button type="button"
+              class="button delete-record delete-music"
+              data-id="${esc(song.id)}">
+              Delete
+            </button>
+          </div>
+        </article>
+      `).join("")
+    : '<p class="empty-admin">No songs have been added yet. Add your first delivery above.</p>';
+
+  // Keep the current catalogue available for editing.
+  window.adminMusicDeliveries = data || [];
+}
+
+
+// Add or update a song.
+
+$("#musicDeliveryForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  const button = $("#saveMusicDelivery");
+  const id = $("#musicDeliveryId").value;
+  const file = $("#musicArtwork").files[0];
+
+  const title = $("#musicTitle").value.trim();
+  const yearValue = $("#musicYear").value.trim();
+  const tag = $("#musicTag").value.trim();
+  const listenUrl = $("#musicListenUrl").value.trim();
+  const spotifyUrl = $("#musicSpotifyUrl").value.trim();
+  const appleUrl = $("#musicAppleUrl").value.trim();
+  const youtubeUrl = $("#musicYoutubeUrl").value.trim();
+  const snippet = $("#musicSnippet").value.trim();
+  const sortOrder = Number($("#musicSortOrder").value || 0);
+  const isPublished = $("#musicPublished").checked;
+
+  if (!title || !listenUrl) {
+    return feedback(
+      "#musicDeliveryFeedback",
+      "Enter the song title and main listening link.",
+      true
+    );
+  }
+
+  if (!/^https:\/\/[^\s]+$/i.test(listenUrl)) {
+    return feedback(
+      "#musicDeliveryFeedback",
+      "The listening link must begin with https://.",
+      true
+    );
+  }
+
+  if (yearValue && (!Number.isInteger(Number(yearValue)) ||
+      Number(yearValue) < 1900 || Number(yearValue) > 2100)) {
+    return feedback(
+      "#musicDeliveryFeedback",
+      "Enter a valid release year.",
+      true
+    );
+  }
+
+  if (!Number.isInteger(sortOrder) || sortOrder < 0) {
+    return feedback(
+      "#musicDeliveryFeedback",
+      "Display order must be a whole number of zero or higher.",
+      true
+    );
+  }
+
+  if (file) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+      return feedback(
+        "#musicDeliveryFeedback",
+        "Artwork must be JPG, PNG or WebP.",
+        true
+      );
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return feedback(
+        "#musicDeliveryFeedback",
+        "Artwork must be smaller than 5 MB.",
+        true
+      );
+    }
+  }
+
+  const existingSong = (window.adminMusicDeliveries || [])
+    .find(song => song.id === id);
+
+  let uploadedPath = null;
+  let artworkUrl = existingSong?.artwork_url || null;
+
+  button.disabled = true;
+  button.textContent = file ? "Uploading artwork..." : "Saving...";
+
+  try {
+    // Upload new artwork when a file is selected.
+    if (file) {
+      const extension = file.type === "image/jpeg"
+        ? "jpg"
+        : file.type === "image/png"
+          ? "png"
+          : "webp";
+
+      uploadedPath = `${crypto.randomUUID()}.${extension}`;
+
+      const { error: uploadError } = await db.storage
+        .from(MUSIC_BUCKET)
+        .upload(uploadedPath, file, {
+          contentType: file.type,
+          cacheControl: "3600",
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = db.storage
+        .from(MUSIC_BUCKET)
+        .getPublicUrl(uploadedPath);
+
+      artworkUrl = publicData.publicUrl;
+    }
+
+    const updates = {
+      title,
+      year: yearValue ? Number(yearValue) : null,
+      tag: tag || null,
+      artwork_url: artworkUrl,
+      listen_url: listenUrl,
+      spotify_url: spotifyUrl || null,
+      apple_url: appleUrl || null,
+      youtube_url: youtubeUrl || null,
+      snippet: snippet || null,
+      sort_order: sortOrder,
+      is_published: isPublished,
+      updated_at: new Date().toISOString()
+    };
+
+    button.textContent = "Saving song...";
+
+    let result;
+
+    if (id) {
+      result = await db
+        .from("music_deliveries")
+        .update(updates)
+        .eq("id", id);
+    } else {
+      result = await db
+        .from("music_deliveries")
+        .insert(updates);
+    }
+
+    if (result.error) throw result.error;
+
+    // Remove the previous artwork only after a successful replacement.
+    if (
+      file &&
+      existingSong?.artwork_url &&
+      existingSong.artwork_url !== artworkUrl
+    ) {
+      const oldPath = getStoragePath(existingSong.artwork_url);
+
+      if (oldPath) {
+        await db.storage.from(MUSIC_BUCKET).remove([oldPath]);
+      }
+    }
+
+    feedback(
+      "#musicDeliveryFeedback",
+      id
+        ? "Song updated successfully."
+        : "New song added to Music Deliveries."
+    );
+
+    resetMusicForm();
+    await loadMusicDeliveries();
+
+  } catch (error) {
+    // Avoid leaving an unused uploaded image if the database save fails.
+    if (uploadedPath) {
+      await db.storage.from(MUSIC_BUCKET).remove([uploadedPath]);
+    }
+
+    feedback(
+      "#musicDeliveryFeedback",
+      error.message || "Could not save this song.",
+      true
+    );
+
+  } finally {
+    button.disabled = false;
+
+    if ($("#musicDeliveryId").value) {
+      button.textContent = "Save changes";
+    } else {
+      button.textContent = "Add song";
+    }
+  }
+});
+
+
+// Edit and delete music records.
+
+document.addEventListener("click", async event => {
+  const editButton = event.target.closest(".edit-music");
+  const deleteButton = event.target.closest(".delete-music");
+
+  if (editButton) {
+    const song = (window.adminMusicDeliveries || [])
+      .find(item => item.id === editButton.dataset.id);
+
+    if (!song) return;
+
+    $("#musicDeliveryId").value = song.id;
+    $("#musicTitle").value = song.title || "";
+    $("#musicYear").value = song.year || "";
+    $("#musicTag").value = song.tag || "";
+    $("#musicListenUrl").value = song.listen_url || "";
+    $("#musicSpotifyUrl").value = song.spotify_url || "";
+    $("#musicAppleUrl").value = song.apple_url || "";
+    $("#musicYoutubeUrl").value = song.youtube_url || "";
+    $("#musicSnippet").value = song.snippet || "";
+    $("#musicSortOrder").value = song.sort_order ?? 0;
+    $("#musicPublished").checked = song.is_published;
+
+    $("#musicArtwork").value = "";
+    $("#musicArtwork").required = false;
+
+    $("#saveMusicDelivery").textContent = "Save changes";
+    $("#cancelMusicEdit").hidden = false;
+
+    feedback(
+      "#musicDeliveryFeedback",
+      `Editing "${song.title}". Leave artwork empty to keep the current image.`
+    );
+
+    $("#musicManagement").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+    $("#musicTitle").focus();
+    return;
+  }
+
+  if (deleteButton) {
+    const song = (window.adminMusicDeliveries || [])
+      .find(item => item.id === deleteButton.dataset.id);
+
+    if (!song) return;
+
+    if (!confirm(`Permanently delete "${song.title}" from Music Deliveries?`)) {
+      return;
+    }
+
+    deleteButton.disabled = true;
+    deleteButton.textContent = "Deleting...";
+
+    const { error } = await db
+      .from("music_deliveries")
+      .delete()
+      .eq("id", song.id);
+
+    if (error) {
+      alert("Could not delete this song: " + error.message);
+      deleteButton.disabled = false;
+      deleteButton.textContent = "Delete";
+      return;
+    }
+
+    // Remove its artwork from storage as well.
+    const artworkPath = getStoragePath(song.artwork_url);
+
+    if (artworkPath) {
+      const { error: storageError } = await db.storage
+        .from(MUSIC_BUCKET)
+        .remove([artworkPath]);
+
+      if (storageError) {
+        console.warn("Song deleted, but artwork cleanup failed:", storageError.message);
+      }
+    }
+
+    await loadMusicDeliveries();
+  }
+});
+
+
+$("#cancelMusicEdit").addEventListener("click", resetMusicForm);
+
+
+/* =========================================
+   LATEST RELEASE SETTINGS
+========================================= */
+
+async function loadLatestRelease() {
+  const input = $("#latestReleaseEmbedUrl");
+  if (!input) return;
+
+  const { data, error } = await db
+    .from("site_settings")
+    .select("value")
+    .eq("key", "latest_release_embed_url")
+    .maybeSingle();
+
+  if (error) {
+    feedback(
+      "#latestReleaseFeedback",
+      "Could not load the latest release setting: " + error.message,
+      true
+    );
+    return;
+  }
+
+  input.value = data?.value || "";
+}
+
+
+$("#latestReleaseForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const input = $("#latestReleaseEmbedUrl");
+  const url = input.value.trim();
+
+  let parsedUrl;
+
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return feedback(
+      "#latestReleaseFeedback",
+      "Enter a valid Spotify embed URL.",
+      true
+    );
+  }
+
+  if (
+    parsedUrl.protocol !== "https:" ||
+    parsedUrl.hostname !== "open.spotify.com" ||
+    !/^\/embed\/(track|album)\/[A-Za-z0-9]+\/?$/.test(parsedUrl.pathname)
+  ) {
+    return feedback(
+      "#latestReleaseFeedback",
+      "Use a Spotify embed link for a track or album.",
+      true
+    );
+  }
+
+  const button = $("#saveLatestRelease");
+  button.disabled = true;
+  button.textContent = "Updating...";
+
+  try {
+    const { error } = await db
+      .from("site_settings")
+      .upsert({
+        key: "latest_release_embed_url",
+        value: url,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: "key"
+      });
+
+    if (error) throw error;
+
+    feedback(
+      "#latestReleaseFeedback",
+      "Latest Release preview updated successfully."
+    );
+
+  } catch (error) {
+    feedback(
+      "#latestReleaseFeedback",
+      error.message || "Could not update the Latest Release preview.",
+      true
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Update Latest Release";
+  }
+});
+
 
 (async()=>{
   if(!db){

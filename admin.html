@@ -93,6 +93,134 @@
       <article class="stat-card"><span>MEMBER ACCOUNTS</span><strong id="memberCount">—</strong></article>
     </div>
 
+
+<!-- MUSIC DELIVERIES MANAGEMENT -->
+    <section class="admin-panel" id="musicManagement">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">THE SOUND ARCHIVE</span>
+              <h2>Music Deliveries</h2>
+              <p>Add new songs, manage existing releases and update their listening links.</p>
+            </div>
+          </div>
+
+          <form id="musicDeliveryForm" class="music-admin-form">
+            <input type="hidden" name="id" id="musicDeliveryId">
+
+            <label>Song title
+              <input type="text" name="title" id="musicTitle"
+                maxlength="140" required placeholder="Enter song title">
+            </label>
+
+            <div class="two-fields">
+              <label>Release year
+                <input type="number" name="year" id="musicYear"
+                  min="1900" max="2100" placeholder="e.g. 2026">
+              </label>
+
+              <label>Music tag
+                <input type="text" name="tag" id="musicTag"
+                  maxlength="60" placeholder="e.g. Afrosoul">
+              </label>
+            </div>
+
+            <label>Song artwork
+              <input type="file" name="artwork" id="musicArtwork"
+                accept="image/jpeg,image/png,image/webp">
+              <small>Upload JPG, PNG or WebP artwork. Leave empty when editing to keep the existing artwork.</small>
+            </label>
+
+            <label>Main listening link
+              <input type="url" name="listen_url" id="musicListenUrl"
+                placeholder="https://..." required>
+            </label>
+
+            <div class="two-fields">
+              <label>Spotify link (optional)
+                <input type="url" name="spotify_url" id="musicSpotifyUrl"
+                  placeholder="https://open.spotify.com/...">
+              </label>
+
+              <label>Apple Music link (optional)
+                <input type="url" name="apple_url" id="musicAppleUrl"
+                  placeholder="https://music.apple.com/...">
+              </label>
+            </div>
+
+            <label>YouTube link (optional)
+              <input type="url" name="youtube_url" id="musicYoutubeUrl"
+                placeholder="https://youtube.com/...">
+            </label>
+
+            <label>Short description (optional)
+              <textarea name="snippet" id="musicSnippet"
+                rows="3" maxlength="300"
+                placeholder="A short note about this song..."></textarea>
+            </label>
+
+            <label>Display order
+              <input type="number" name="sort_order" id="musicSortOrder"
+                value="0" min="0">
+              <small>Higher numbers appear earlier in the archive.</small>
+            </label>
+
+            <label class="admin-check">
+              <input type="checkbox" name="is_published"
+                id="musicPublished" checked>
+              Publish this song on the website
+            </label>
+
+            <div class="broadcast-actions">
+              <button type="submit" class="button button-purple"
+                id="saveMusicDelivery">Add song</button>
+
+              <button type="button" class="button button-soft"
+                id="cancelMusicEdit" hidden>Cancel editing</button>
+            </div>
+
+            <p class="form-feedback" id="musicDeliveryFeedback"
+              aria-live="polite"></p>
+          </form>
+
+          <div class="managed-content">
+            <div class="managed-heading">
+              <h3>Your music catalogue</h3>
+              <span>Manage existing music deliveries</span>
+            </div>
+
+            <div id="musicDeliveriesList" class="record-list">
+              Loading music catalogue...
+            </div>
+          </div>
+        </section>
+
+        <!-- LATEST RELEASE SETTINGS -->
+        <section class="admin-panel" id="latestReleaseSettings">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">FEATURED DELIVERY</span>
+              <h2>Latest Release Preview</h2>
+              <p>Choose the Spotify track or album displayed in the Latest Release section of your website.</p>
+            </div>
+          </div>
+
+          <form id="latestReleaseForm">
+            <label>Spotify embed link
+              <input type="url" id="latestReleaseEmbedUrl"
+                name="embed_url" required
+                placeholder="https://open.spotify.com/embed/track/...">
+              <small>Use Spotify's embed link, not the ordinary listening link.</small>
+            </label>
+
+            <button type="submit" class="button button-purple"
+              id="saveLatestRelease">Update Latest Release</button>
+
+            <p class="form-feedback" id="latestReleaseFeedback"
+              aria-live="polite"></p>
+          </form>
+        </section>
+
+
     <section class="admin-panel">
       <div class="panel-heading">
         <div><h2>Your Mailers</h2><p>Export the subscriber email list as a CSV file.</p></div>
